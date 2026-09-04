@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Living India — Digital Heritage</title>
+<style>
+:root{--ink:#241b16;--muted:#75685e;--paper:#f7f0e6;--card:#fffaf2;--accent:#b65b2a;--gold:#c99645;--green:#46634e;--line:#dfd2c2}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--paper);color:var(--ink)}
+nav{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 6%;border-bottom:1px solid var(--line);background:#fbf6ed;position:sticky;top:0;z-index:10}
+.logo{font-family:Georgia,serif;font-size:25px;font-weight:700}.logo span{color:var(--accent)}
+.navlinks{display:flex;gap:28px;color:#5e5148;font-size:14px}.navlinks a{cursor:pointer}.btn{border:0;border-radius:9px;padding:11px 18px;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:white}.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.hero{padding:72px 7% 58px;display:grid;grid-template-columns:1.15fr .85fr;gap:55px;align-items:center;background:linear-gradient(110deg,#f7f0e6,#f2e4d2)}
+.eyebrow{color:var(--accent);font-weight:800;letter-spacing:2px;font-size:12px}.hero h1{font-family:Georgia,serif;font-size:64px;line-height:1.02;margin:15px 0}.hero h1 em{color:var(--accent);font-style:normal}.hero p{font-size:18px;line-height:1.7;color:var(--muted);max-width:620px}.actions{display:flex;gap:12px;margin-top:26px}.visual{height:390px;border-radius:22px;overflow:hidden;box-shadow:0 18px 50px #55351c22;background:#d9c0a1}.visual img{width:100%;height:100%;object-fit:cover}
+section{padding:60px 7%}.sectionhead{display:flex;justify-content:space-between;align-items:end;margin-bottom:25px}.sectionhead h2{font-family:Georgia,serif;font-size:35px;margin:0}.sectionhead p{color:var(--muted);max-width:520px}
+.search{display:flex;gap:10px;background:white;border:1px solid var(--line);padding:7px;border-radius:12px;width:360px}.search input{border:0;outline:0;padding:10px;flex:1;background:transparent}
+.mapbox{height:330px;border-radius:20px;background:#e7dccb;position:relative;overflow:hidden;border:1px solid var(--line)}
+.india{position:absolute;inset:20px;background:radial-gradient(ellipse at 53% 35%,#d1ad76 0 4%,transparent 4.5%),radial-gradient(ellipse at 44% 54%,#b87a51 0 3%,transparent 3.5%),radial-gradient(ellipse at 61% 67%,#54705a 0 3%,transparent 3.5%);opacity:.75}
+.maplabel{position:absolute;padding:10px 14px;background:#fffaf2e8;border:1px solid var(--line);border-radius:9px;font-weight:700;font-size:13px}.l1{left:25%;top:29%}.l2{left:50%;top:42%}.l3{left:67%;top:62%}.l4{left:36%;top:70%}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}.card .icon{font-size:28px}.card h3{margin:12px 0 8px}.card p{color:var(--muted);line-height:1.55;font-size:14px}.tag{display:inline-block;background:#ead8b7;color:#684d27;border-radius:99px;padding:5px 9px;font-size:11px;font-weight:800}
+.community{background:#2f4737;color:#fff}.community .sectionhead p{color:#cbd7cc}.post{background:#f8f2e9;color:var(--ink);border-radius:15px;padding:18px;margin-bottom:12px}.posttop{display:flex;justify-content:space-between}.post small{color:var(--muted)}.post p{line-height:1.55}
+.risk{display:grid;grid-template-columns:1fr 1fr;gap:18px}.riskbox{border:1px solid var(--line);background:var(--card);border-radius:15px;padding:20px}.meter{height:8px;background:#e5dbce;border-radius:9px;margin:13px 0}.meter i{display:block;height:100%;border-radius:9px;background:var(--accent)}
+footer{padding:30px 7%;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+.modal{display:none;position:fixed;inset:0;background:#241b1688;z-index:20;align-items:center;justify-content:center;padding:20px}.modal.open{display:flex}.modalbox{background:var(--card);width:min(650px,100%);border-radius:18px;padding:28px;max-height:90vh;overflow:auto}.close{float:right;border:0;background:none;font-size:24px;cursor:pointer}
+textarea,input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:9px;background:#fffdf8;margin:7px 0 15px}label{font-size:13px;font-weight:700}
+@media(max-width:850px){.hero{grid-template-columns:1fr;padding-top:45px}.hero h1{font-size:45px}.visual{height:270px}.cards{grid-template-columns:1fr}.risk{grid-template-columns:1fr}.navlinks{display:none}.search{width:100%}.sectionhead{display:block}}
+</style></head>
+<body>
+<nav><div class="logo">Living <span>India</span></div><div class="navlinks"><a onclick="go('explore')">Explore</a><a onclick="go('community')">Community</a><a onclick="go('risk')">Heritage at Risk</a><a onclick="openModal('contribute')">Contribute</a></div><button class="btn primary" onclick="openModal('login')">Sign in</button></nav>
+
+<header class="hero"><div><div class="eyebrow">INDIA'S LIVING HERITAGE</div><h1>Heritage is not just <em>history.</em><br>It is alive.</h1><p>Discover the stories, traditions, crafts and memories carried by India's communities — and help preserve them for the next generation.</p><div class="actions"><button class="btn primary" onclick="go('explore')">Explore India →</button><button class="btn ghost" onclick="openModal('contribute')">Share a story</button></div></div><div class="visual"><img src="hero.svg" alt="Indian heritage illustration"></div></header>
+
+<section id="explore"><div class="sectionhead"><div><div class="eyebrow">DISCOVER</div><h2>Explore India's heritage</h2><p>Move beyond monuments. Find the living traditions, people and stories behind them.</p></div><div class="search"><input id="search" placeholder="Search crafts, festivals, places…" oninput="filterCards()"><button class="btn primary">⌕</button></div></div>
+<div class="mapbox"><div class="india"></div><div class="maplabel l1">Rajasthan · Crafts</div><div class="maplabel l2">Bihar · Madhubani</div><div class="maplabel l3">Tamil Nadu · Dance</div><div class="maplabel l4">Harappa · Archaeology</div></div>
+<div class="cards" id="cards" style="margin-top:20px">
+<div class="card" data-key="harappa archaeology indus"><span class="tag">ARCHAEOLOGY</span><div class="icon">🏺</div><h3>Harappa</h3><p>Explore urban planning, drainage, craft workshops, seals and everyday life through an interactive experience.</p><button class="btn ghost" onclick="openModal('harappa')">Experience →</button></div>
+<div class="card" data-key="madhubani painting bihar craft"><span class="tag">CRAFT</span><div class="icon">🖌️</div><h3>Madhubani Painting</h3><p>Discover motifs, techniques and the voices of artists who continue this living tradition.</p><button class="btn ghost" onclick="openModal('heritage')">Discover →</button></div>
+<div class="card" data-key="folk music rajasthan music"><span class="tag">ORAL HERITAGE</span><div class="icon">🎶</div><h3>Folk Music</h3><p>Listen to community stories and regional variations passed from one generation to another.</p><button class="btn ghost" onclick="openModal('heritage')">Listen →</button></div></div></section>
+
+<section class="community" id="community"><div class="sectionhead"><div><div class="eyebrow" style="color:#e0b66c">COMMUNITY VOICES</div><h2>Culture belongs to everyone.</h2><p>Ask, share, discuss and preserve. Contributions from practitioners and communities add context that textbooks cannot.</p></div><button class="btn" style="background:#e0b66c;color:#2f4737" onclick="openModal('contribute')">+ Contribute</button></div>
+<div id="posts"><div class="post"><div class="posttop"><strong>🧑‍🎨 Meera · Madhubani artist</strong><small>Practitioner ✓</small></div><p>“The same motif can have different meanings between villages. Our community uses this one during wedding paintings.”</p><button class="btn ghost" onclick="comment(this)">Reply</button></div><div class="post"><div class="posttop"><strong>👤 Arjun · Explorer</strong><small>2h ago</small></div><p>Does anyone know how this tradition changed when natural dyes became harder to find?</p><button class="btn ghost" onclick="comment(this)">Reply</button></div></div></section>
+
+<section id="risk"><div class="sectionhead"><div><div class="eyebrow">PRESERVE</div><h2>Heritage at risk</h2><p>Spot traditions with low documentation or declining participation so communities and institutions can focus preservation efforts.</p></div></div><div class="risk"><div class="riskbox"><span class="tag">HIGH PRIORITY</span><h3>Traditional Palm-Leaf Storytelling</h3><p>Low digital documentation · Few active practitioners</p><div class="meter"><i style="width:28%"></i></div><small>Heritage vitality score: 28/100</small></div><div class="riskbox"><span class="tag">WATCH</span><h3>Regional Folk Instruments</h3><p>Strong practice, but limited younger participation</p><div class="meter"><i style="width:54%"></i></div><small>Heritage vitality score: 54/100</small></div></div></section>
+
+<footer>Living India · A prototype for community-driven digital heritage preservation.</footer>
+
+<div class="modal" id="modal"><div class="modalbox"><button class="close" onclick="closeModal()">×</button><div id="modalcontent"></div></div></div>
+<script>
+const modal=document.getElementById('modal');
+function openModal(type){let c='';
+if(type==='login') c='<h2>Welcome to Living India</h2><p>Sign in to contribute stories, follow traditions and build your heritage profile.</p><label>Email</label><input placeholder="you@example.com"><label>Password</label><input type="password" placeholder="••••••••"><button class="btn primary">Sign in</button>';
+if(type==='contribute') c='<h2>Share living heritage</h2><p>Your contribution can preserve a story that may otherwise be lost.</p><label>What are you sharing?</label><select><option>Family story</option><option>Traditional practice</option><option>Craft technique</option><option>Photo / video</option><option>Regional variation</option></select><label>Title</label><input placeholder="e.g. A wedding song from my village"><label>Your story</label><textarea rows="6" placeholder="Tell us what you know…"></textarea><button class="btn primary" onclick="submitPost()">Publish contribution</button>';
+if(type==='harappa') c='<span class="tag">INTERACTIVE EXPERIENCE</span><h2>Experience Harappa</h2><p>Step into a reconstructed 2D Harappan settlement. Explore the drainage system, workshops, streets and dockyard while completing history-based quests.</p><div class="card"><h3>Prototype module</h3><p>🎮 Godot 2D exploration · 🗺️ 160×160 tile world · 🏺 Artifact collection</p><button class="btn primary" onclick="alert(\'Connect your Godot build here.\')">Launch experience</button></div>';
+if(type==='heritage') c='<span class="tag">COMMUNITY DOCUMENTED</span><h2>Living Heritage</h2><p>This prototype page combines historical context with practitioner voices, regional variations and community discussion.</p><h3>Sources & voices</h3><p>📚 Historical references · 🧑‍🎨 Practitioner contribution · 👥 Community stories</p><button class="btn primary" onclick="closeModal()">Join the discussion</button>';
+document.getElementById('modalcontent').innerHTML=c;modal.classList.add('open')}
+function closeModal(){modal.classList.remove('open')}
+function go(id){document.getElementById(id).scrollIntoView({behavior:'smooth'})}
+function filterCards(){let q=document.getElementById('search').value.toLowerCase();document.querySelectorAll('#cards .card').forEach(x=>x.style.display=x.dataset.key.includes(q)?'block':'none')}
+function submitPost(){closeModal();document.getElementById('posts').insertAdjacentHTML('afterbegin','<div class="post"><div class="posttop"><strong>👤 You · New contributor</strong><small>Just now</small></div><p>Your contribution has been added to the community review queue.</p><small>⏳ Awaiting practitioner/expert verification</small></div>');go('community')}
+function comment(b){let t=prompt('Write a reply');if(t)b.parentElement.insertAdjacentHTML('beforeend','<p><strong>↳ You:</strong> '+t.replace(/</g,'&lt;')+'</p>')}
+modal.addEventListener('click',e=>{if(e.target===modal)closeModal()})
+</script></body></html>
