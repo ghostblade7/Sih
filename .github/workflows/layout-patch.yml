@@ -1,0 +1,64 @@
+name: Apply clean navigation layout patch
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/layout-patch.yml
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch app layout
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('main.jsx')
+          s=p.read_text()
+          old='''<div className="nav-label">EXPERIENCE</div>{experienceOptions.map(([id,label])=><button key={id} className="feature-nav" onClick={()=>showExperience(id)}><Icon>{({image:"▧",timeline:"◷",process:"✦",connections:"⌘",surprise:"!",quiz:"?",audio:"♪",beforeafter:"↔",community:"♧",passport:"◇"})[id]}</Icon>{label}</button>)}'''
+          new='''<button className={page==="community"?"active":""} onClick={()=>nav("community")}><Icon>♧</Icon>Community</button>'''
+          if old not in s: raise SystemExit('sidebar feature block not found')
+          s=s.replace(old,new,1)
+          old2='''<button className={page==="community"?"active":""} onClick={()=>nav("community")}><Icon>♧</Icon>Community</button><button onClick={()=>setModal("contribute")}><Icon>✎</Icon>Contribute</button>'''
+          new2='''<button onClick={()=>setModal("contribute")}><Icon>✎</Icon>Contribute</button>'''
+          if old2 not in s: raise SystemExit('community block not found')
+          s=s.replace(old2,new2,1)
+          old3='''<section className="map-feature section"><div className="section-head">'''
+          features='''<section className="experiences section"><div className="section-head"><div><h2>✦ Explore Heritage, Your Way</h2><p>Go beyond reading — listen, discover, compare and play.</p></div><button onClick={()=>showExperience("passport")}>Open Passport →</button></div><div className="experience-grid">{experienceOptions.map(([id,label,desc])=><button className="experience-card" key={id} onClick={()=>showExperience(id)}><span className="experience-icon">{({image:"▧",timeline:"◷",process:"✦",connections:"⌘",surprise:"!",quiz:"?",audio:"♪",beforeafter:"↔",community:"♧",passport:"◇"})[id]}</span><div><b>{label}</b><small>{desc}</small></div><i>→</i></button>)}</div></section><section className="map-feature section"><div className="section-head">'''
+          if old3 not in s: raise SystemExit('home insertion point not found')
+          s=s.replace(old3,features,1)
+          p.write_text(s)
+          PY
+      - name: Style experience section
+        run: |
+          cat >> ui-overrides.css <<'CSS'
+          .nav-label,.feature-nav{display:none!important}
+          .experiences{padding-top:18px}
+          .experience-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:14px}
+          .experience-card{min-height:118px;text-align:left;padding:15px;border:1px solid #d8c29d;border-radius:15px;background:#f8ecd7;color:#493a2d;display:flex;flex-direction:column;gap:10px;position:relative;transition:.22s;box-shadow:0 7px 18px rgba(60,42,27,.07)}
+          .experience-card:hover{transform:translateY(-4px);border-color:#b47b49;box-shadow:0 12px 25px rgba(60,42,27,.12)}
+          .experience-icon{width:31px;height:31px;border-radius:50%;display:grid;place-items:center;background:#8f3e27;color:#ffe9c5;font-size:16px}
+          .experience-card b{display:block;font:600 17px 'Cormorant Garamond',serif;line-height:1.05;padding-right:15px}
+          .experience-card small{display:block;font:9px 'DM Sans',sans-serif;color:#876e55;line-height:1.4;margin-top:4px}
+          .experience-card i{position:absolute;right:12px;bottom:11px;font-style:normal;color:#a15b36;font-size:14px}
+          @media(max-width:1000px){.experience-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+          @media(max-width:650px){.experience-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.experience-card{min-height:125px;padding:12px}.experience-card b{font-size:15px}}
+          CSS
+      - name: Commit patched files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add main.jsx ui-overrides.css
+          git diff --cached --quiet || git commit -m "feat: move experiences to home and simplify sidebar"
+          git push
+      - name: Remove patch workflow
+        if: always()
+        run: |
+          rm -f .github/workflows/layout-patch.yml
+          git add -u .github/workflows/layout-patch.yml || true
+          git diff --cached --quiet || git commit -m "chore: remove one-time layout patch workflow"
+          git push || true
