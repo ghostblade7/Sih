@@ -1,4 +1,4 @@
-/* Living India auth fallback — guarantees the Login button opens even if auth.js fails to initialize. */
+/* Living India auth fallback — guarantees the Login button opens. */
 (function(){
   function style(){
     if(document.getElementById('li-fallback-style')) return;
@@ -14,17 +14,11 @@
     r.querySelector('.li-fb-close').onclick=()=>r.classList.remove('open');
     r.onclick=e=>{if(e.target===r)r.classList.remove('open')};
     const msg=(t,err)=>{const m=document.getElementById('li-fb-msg');m.textContent=t;m.style.color=err?'#a33d32':'#52725f'};
-    r.querySelector('#li-fb-submit').onclick=async()=>{
-      if(!window.supabase?.createClient)return msg('Authentication service is unavailable. Please reload once.',true);
-      const email=document.getElementById('li-fb-email').value.trim(),pass=document.getElementById('li-fb-pass').value;
-      if(!email||pass.length<6)return msg('Enter your email and a password of at least 6 characters.',true);
-      const c=window.supabase.createClient('https://nbxxknkecpnscirfnov.supabase.co','sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb');
-      msg('Signing you in…'); const {error}=await c.auth.signInWithPassword({email,password:pass}); if(error)return msg(error.message,true); msg('Signed in successfully!'); setTimeout(()=>r.classList.remove('open'),700);
-    };
-    r.querySelector('#li-fb-google').onclick=async()=>{if(!window.supabase?.createClient)return msg('Authentication service is unavailable. Please reload once.',true);const c=window.supabase.createClient('https://nbxxknkecpnscirfnov.supabase.co','sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb');const {error}=await c.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://ghostblade7.github.io/Sih/'}});if(error)msg(error.message,true)};
-    r.querySelector('#li-fb-forgot').onclick=async()=>{const email=document.getElementById('li-fb-email').value.trim();if(!email)return msg('Enter your email first.',true);if(!window.supabase?.createClient)return msg('Authentication service is unavailable.',true);const c=window.supabase.createClient('https://nbxxknkecpnscirfnov.supabase.co','sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb');const {error}=await c.auth.resetPasswordForEmail(email,{redirectTo:'https://ghostblade7.github.io/Sih/'});msg(error?error.message:'Password reset email sent. Check your inbox.',!!error)};
+    r.querySelector('#li-fb-submit').onclick=async()=>{if(!window.supabase?.createClient)return msg('Authentication service is unavailable. Please reload once.',true);const email=document.getElementById('li-fb-email').value.trim(),pass=document.getElementById('li-fb-pass').value;if(!email||pass.length<6)return msg('Enter your email and a password of at least 6 characters.',true);const c=window.supabase.createClient('https://nbxxknkecpnscirfnov.supabase.co','sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb');msg('Signing you in…');const{error}=await c.auth.signInWithPassword({email,password:pass});if(error)return msg(error.message,true);msg('Signed in successfully!');setTimeout(()=>r.classList.remove('open'),700)};
+    r.querySelector('#li-fb-google').onclick=async()=>{if(!window.supabase?.createClient)return msg('Authentication service is unavailable.',true);const c=window.supabase.createClient('https://nbxxknkecpnscirfnov.supabase.co','sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb');const{error}=await c.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://ghostblade7.github.io/Sih/'}});if(error)msg(error.message,true)};
+    r.querySelector('#li-fb-forgot').onclick=async()=>{const email=document.getElementById('li-fb-email').value.trim();if(!email)return msg('Enter your email first.',true);if(!window.supabase?.createClient)return msg('Authentication service is unavailable.',true);const c=window.supabase.createClient('https://nbxxknkecpnscirfnov.supabase.co','sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb');const{error}=await c.auth.resetPasswordForEmail(email,{redirectTo:'https://ghostblade7.github.io/Sih/'});msg(error?error.message:'Password reset email sent. Check your inbox.',!!error)};
   }
-  function open(){mount(); if(typeof window.LivingIndiaAuthOpen==='function'){window.LivingIndiaAuthOpen('signin');return}document.getElementById('li-fallback').classList.add('open');document.getElementById('li-fb-email')?.focus()}
+  function open(){mount();let opened=false;if(typeof window.LivingIndiaAuthOpen==='function'){try{window.LivingIndiaAuthOpen('signin');opened=true}catch(e){console.error(e)}}setTimeout(()=>{const real=document.getElementById('li-auth-root');if(!opened||!real?.classList.contains('open')){document.getElementById('li-fallback').classList.add('open');document.getElementById('li-fb-email')?.focus()}},120)}
   function init(){mount();document.addEventListener('click',function(e){const b=e.target.closest?.('button');if(!b)return;const t=(b.textContent||'').replace(/\s+/g,' ').trim();if(b.classList.contains('avatar')||/^♙?\s*Login$/i.test(t)){e.preventDefault();e.stopImmediatePropagation();open()}},true)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
