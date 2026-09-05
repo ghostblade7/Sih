@@ -3,7 +3,7 @@
  * Replace SUPABASE_PUBLISHABLE_KEY with the project's publishable key from Supabase.
  */
 const SUPABASE_URL = "https://nbxxknkecpnscirfnov.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb";
 
 let liSupabase = null;
 let liMode = "signin";
