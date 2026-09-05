@@ -1,0 +1,127 @@
+/* Living India — Supabase Auth
+ * The publishable/anon key is intentionally kept in the frontend; never put a service_role/secret key here.
+ * Replace SUPABASE_PUBLISHABLE_KEY with the project's publishable key from Supabase.
+ */
+const SUPABASE_URL = "https://nbxxknkecpnscirfnov.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
+
+let liSupabase = null;
+let liMode = "signin";
+let liBusy = false;
+
+function liReady() {
+  if (SUPABASE_PUBLISHABLE_KEY.includes("PASTE_YOUR")) {
+    console.warn("Living India: add the Supabase publishable key in auth.js before testing authentication.");
+    return false;
+  }
+  if (!window.supabase?.createClient) {
+    console.error("Living India: Supabase JS failed to load.");
+    return false;
+  }
+  if (!liSupabase) liSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  return true;
+}
+
+function liStyles() {
+  if (document.getElementById("li-auth-styles")) return;
+  const s = document.createElement("style");
+  s.id = "li-auth-styles";
+  s.textContent = `
+  #li-auth-root{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(10,27,27,.72);backdrop-filter:blur(8px)}
+  #li-auth-root.open{display:flex}.li-auth-card{width:min(430px,100%);background:#f8f2e6;border:1px solid rgba(188,146,74,.55);border-radius:22px;box-shadow:0 24px 80px rgba(0,0,0,.38);padding:30px;color:#173c3b;position:relative}
+  .li-auth-close{position:absolute;right:14px;top:12px;border:0;background:transparent;font-size:25px;cursor:pointer;color:#173c3b}.li-auth-mark{text-align:center;font-size:27px}.li-auth-card h2{text-align:center;margin:8px 0 4px;font-family:Georgia,serif;font-size:29px}.li-auth-sub{text-align:center;color:#65706c;margin:0 0 22px;font-size:14px}
+  .li-auth-card label{display:block;font-size:13px;font-weight:700;margin:13px 0 6px}.li-auth-card input{box-sizing:border-box;width:100%;padding:13px 14px;border:1px solid #cfc8b9;border-radius:11px;background:#fffdf8;font-size:15px;outline:none}.li-auth-card input:focus{border-color:#a47b38;box-shadow:0 0 0 3px rgba(164,123,56,.12)}
+  .li-auth-submit{width:100%;margin-top:18px;padding:13px;border:0;border-radius:11px;background:#173c3b;color:#fff;font-weight:800;font-size:15px;cursor:pointer}.li-auth-submit:disabled{opacity:.6;cursor:wait}
+  .li-auth-google{width:100%;margin-top:10px;padding:12px;border:1px solid #bcb5a7;border-radius:11px;background:#fff;color:#173c3b;font-weight:700;cursor:pointer}.li-auth-divider{display:flex;align-items:center;gap:10px;margin:17px 0;color:#888;font-size:12px}.li-auth-divider:before,.li-auth-divider:after{content:"";height:1px;background:#d7d0c3;flex:1}.li-auth-switch{text-align:center;margin:18px 0 0;font-size:13px;color:#65706c}.li-auth-switch button,.li-auth-forgot{border:0;background:none;color:#9a6e28;font-weight:800;cursor:pointer}.li-auth-forgot{display:block;margin:9px 0 0;padding:0;font-size:12px}.li-auth-msg{min-height:20px;margin-top:12px;text-align:center;font-size:13px;font-weight:700}.li-auth-user{position:fixed;right:18px;top:74px;z-index:9998;background:#f8f2e6;border:1px solid #d3c4a8;border-radius:12px;padding:9px 12px;display:none;box-shadow:0 8px 25px rgba(0,0,0,.18);color:#173c3b}.li-auth-user button{margin-left:10px;border:0;background:none;color:#9a6e28;font-weight:800;cursor:pointer}
+  `;
+  document.head.appendChild(s);
+}
+
+function liMount() {
+  liStyles();
+  if (document.getElementById("li-auth-root")) return;
+  const root = document.createElement("div"); root.id = "li-auth-root";
+  root.innerHTML = `<div class="li-auth-card" role="dialog" aria-modal="true"><button class="li-auth-close" aria-label="Close">×</button><div class="li-auth-mark">✺</div><h2>Living India</h2><p class="li-auth-sub" id="li-auth-title">Welcome back — sign in to continue.</p><label>Email</label><input id="li-email" type="email" autocomplete="email" placeholder="you@example.com"><label>Password</label><input id="li-password" type="password" autocomplete="current-password" placeholder="••••••••"><button class="li-auth-forgot" id="li-forgot">Forgot password?</button><button class="li-auth-submit" id="li-submit">Sign In</button><div class="li-auth-divider">OR</div><button class="li-auth-google" id="li-google">Continue with Google</button><p class="li-auth-switch" id="li-switch">New to Living India? <button>Sign up</button></p><div class="li-auth-msg" id="li-msg"></div></div>`;
+  document.body.appendChild(root);
+  root.addEventListener("click", e => { if (e.target === root || e.target.closest(".li-auth-close")) liClose(); });
+  root.querySelector("#li-submit").onclick = liEmailAuth;
+  root.querySelector("#li-google").onclick = liGoogle;
+  root.querySelector("#li-forgot").onclick = liForgot;
+  root.querySelector("#li-switch button").onclick = () => { liMode = liMode === "signin" ? "signup" : "signin"; liRenderMode(); };
+}
+
+function liRenderMode() {
+  const signup = liMode === "signup";
+  document.getElementById("li-auth-title").textContent = signup ? "Create your account and start exploring." : "Welcome back — sign in to continue.";
+  document.getElementById("li-submit").textContent = signup ? "Create Account" : "Sign In";
+  document.getElementById("li-forgot").style.display = signup ? "none" : "block";
+  document.querySelector("#li-switch").innerHTML = signup ? 'Already have an account? <button>Sign in</button>' : 'New to Living India? <button>Sign up</button>';
+  document.querySelector("#li-switch button").onclick = () => { liMode = signup ? "signin" : "signup"; liRenderMode(); };
+  document.getElementById("li-msg").textContent = "";
+}
+
+function liOpen(mode="signin") {
+  liMount(); liMode = mode; liRenderMode(); document.getElementById("li-auth-root").classList.add("open"); setTimeout(() => document.getElementById("li-email")?.focus(), 50);
+}
+function liClose() { document.getElementById("li-auth-root")?.classList.remove("open"); }
+function liMsg(text, error=false) { const el=document.getElementById("li-msg"); el.textContent=text; el.style.color=error?"#a33d32":"#52725f"; }
+function liSetBusy(v) { liBusy=v; document.getElementById("li-submit").disabled=v; document.getElementById("li-google").disabled=v; }
+
+async function liEmailAuth() {
+  if (!liReady() || liBusy) return;
+  const email=document.getElementById("li-email").value.trim(); const password=document.getElementById("li-password").value;
+  if (!email || password.length < 6) return liMsg("Enter a valid email and a password of at least 6 characters.", true);
+  liSetBusy(true); liMsg("Please wait…");
+  try {
+    if (liMode === "signup") {
+      const {error}=await liSupabase.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin}});
+      if (error) throw error;
+      liMsg("Account created. Check your email to confirm your account.");
+    } else {
+      const {error}=await liSupabase.auth.signInWithPassword({email,password});
+      if (error) throw error;
+      liMsg("Signed in successfully!"); setTimeout(liClose,700);
+    }
+  } catch(e) { liMsg(e.message || "Authentication failed.", true); }
+  finally { liSetBusy(false); }
+}
+
+async function liGoogle() {
+  if (!liReady() || liBusy) return;
+  liSetBusy(true); liMsg("Opening Google…");
+  try { const {error}=await liSupabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin}}); if(error) throw error; }
+  catch(e) { liMsg(e.message || "Google sign-in failed.", true); liSetBusy(false); }
+}
+
+async function liForgot() {
+  if (!liReady()) return;
+  const email=document.getElementById("li-email").value.trim();
+  if(!email) return liMsg("Enter your email first, then tap Forgot password.",true);
+  liMsg("Sending reset email…");
+  try { const {error}=await liSupabase.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin}); if(error) throw error; liMsg("Password reset email sent. Check your inbox."); }
+  catch(e){ liMsg(e.message||"Could not send reset email.",true); }
+}
+
+function liAuthListener() {
+  if (!liReady()) return;
+  liSupabase.auth.onAuthStateChange((event,session)=>{
+    const u=document.getElementById("li-auth-user"); if(!u) return;
+    if(session?.user){ u.style.display="block"; u.querySelector("span").textContent=session.user.email||"Signed in"; } else u.style.display="none";
+  });
+  liSupabase.auth.getSession().then(({data})=>{ const u=document.getElementById("li-auth-user"); if(u&&data.session){u.style.display="block";u.querySelector("span").textContent=data.session.user.email||"Signed in";} });
+}
+
+function liInterceptLogin() {
+  document.addEventListener("click", e => {
+    const btn=e.target.closest("button"); if(!btn) return;
+    const text=(btn.textContent||"").trim();
+    if(text === "Login" || text === "♙Login") { e.preventDefault(); e.stopImmediatePropagation(); liOpen("signin"); }
+  }, true);
+}
+
+window.addEventListener("DOMContentLoaded",()=>{
+  liMount();
+  const user=document.createElement("div"); user.id="li-auth-user"; user.className="li-auth-user"; user.innerHTML='<span></span><button>Sign out</button>'; document.body.appendChild(user);
+  user.querySelector("button").onclick=async()=>{if(liReady()) await liSupabase.auth.signOut(); user.style.display="none";};
+  liInterceptLogin(); liAuthListener();
+});
