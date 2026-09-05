@@ -2,7 +2,6 @@ import React,{useEffect,useMemo,useState} from "react";
 import {createRoot} from "react-dom/client";
 import "./style.css";
 import "./ui-overrides.css";
-import "./auth.js";
 const API=import.meta.env.VITE_API_URL||"http://localhost:3001/api";
 const IMG={harappa:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Harappa_Ruins_-_IV.jpg",madhubani:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Madhubani_painting.jpg",baul:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Baul_singer.jpg",kalamkari:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Kalamkari_painting.jpg",theyyam:"https://commons.wikimedia.org/wiki/Special:Redirect/file/The_Theyyam.jpg",pattachitra:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Pattachitra_painting.jpg"};
 const heritage=[
