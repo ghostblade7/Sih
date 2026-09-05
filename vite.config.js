@@ -7,7 +7,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(process.cwd(), 'index.html'),
-        login: resolve(process.cwd(), 'login.html')
+        login: resolve(process.cwd(), 'login.html'),
+        auth: resolve(process.cwd(), 'auth.html')
       }
     }
   }
