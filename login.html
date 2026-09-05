@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#173c3b" />
+  <title>Living India — Sign in</title>
+  <style>
+    :root{--cream:#f4ead7;--paper:#fffaf0;--teal:#173c3b;--rust:#a64b32;--gold:#b88a3b;--ink:#263b38;--muted:#6f7770;--line:#d9c8a8}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(circle at 15% 10%,#fff8e9 0,transparent 32%),linear-gradient(135deg,#ead9b8,#f8efdf 48%,#dfc99e);font-family:Georgia,'Times New Roman',serif;color:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px}
+    body:before{content:"✺  ❋  ✦  ◈  ✺";position:fixed;inset:16px;pointer-events:none;border:1px solid var(--gold);color:#b88a3b55;font-size:24px;letter-spacing:34px;padding:12px;}
+    .shell{width:min(940px,100%);min-height:610px;background:var(--paper);border:1px solid var(--gold);box-shadow:0 24px 70px #173c3b26;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;position:relative}
+    .visual{background:linear-gradient(160deg,#173c3b,#285b57 55%,#a64b32);color:#fffaf0;padding:48px;position:relative;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+    .visual:after{content:"INDIA";position:absolute;right:-35px;bottom:45px;font:700 150px/1 Georgia;letter-spacing:8px;color:#ffffff0d;transform:rotate(-8deg)}
+    .symbol{font-size:42px;color:#e0b85d}.brand{font-size:25px;letter-spacing:4px}.brand b{color:#e0b85d}.tag{font-size:11px;letter-spacing:3px;margin-top:8px;opacity:.8}
+    .visual h1{font-size:52px;line-height:.98;margin:0 0 18px;font-weight:500}.visual h1 i{color:#e0b85d}.visual p{max-width:350px;font-size:17px;line-height:1.65;opacity:.9}
+    .motto{font-size:12px;letter-spacing:2px;line-height:1.8;opacity:.75}
+    .form{padding:44px;display:flex;flex-direction:column;justify-content:center}.back{border:0;background:none;color:var(--teal);font:inherit;cursor:pointer;text-align:left;padding:0;margin-bottom:28px}.eyebrow{font:700 11px/1.2 Arial,sans-serif;letter-spacing:2.5px;color:var(--rust);margin-bottom:10px}.form h2{font-size:35px;margin:0 0 10px;font-weight:500;color:var(--teal)}.sub{color:var(--muted);font:14px/1.6 Arial,sans-serif;margin:0 0 25px}
+    label{font:700 12px Arial,sans-serif;letter-spacing:.6px;margin:13px 0 7px;color:var(--ink)}input{width:100%;padding:14px 15px;border:1px solid var(--line);background:#fffdf7;color:var(--ink);font:15px Arial,sans-serif;outline:none}input:focus{border-color:var(--teal);box-shadow:0 0 0 2px #173c3b12}.password-wrap{position:relative}.password-wrap input{padding-right:70px}.show{position:absolute;right:8px;top:8px;height:36px;border:0;background:none;color:var(--teal);font:12px Arial;cursor:pointer}.primary{margin-top:20px;width:100%;padding:14px 18px;border:1px solid var(--teal);background:var(--teal);color:#fffaf0;font:700 13px Arial,sans-serif;letter-spacing:.8px;cursor:pointer}.primary:hover{background:#235552}.secondary{width:100%;padding:13px 18px;border:1px solid var(--line);background:#fffaf0;color:var(--teal);font:700 13px Arial,sans-serif;cursor:pointer}.divider{display:flex;align-items:center;gap:10px;margin:20px 0;color:#999;font:11px Arial}.divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}.links{display:flex;justify-content:space-between;margin-top:17px;font:12px Arial}.links button{border:0;background:none;color:var(--rust);cursor:pointer;padding:0}.status{min-height:20px;margin-top:14px;font:12px/1.5 Arial;color:var(--rust)}.status.ok{color:#356b4e}.foot{margin-top:22px;text-align:center;font:11px Arial;color:#8b8b7e}.hidden{display:none!important}
+    @media(max-width:760px){body{padding:0}.shell{min-height:100vh;border:0;grid-template-columns:1fr}.visual{display:none}.form{padding:38px 26px}.form h2{font-size:31px}body:before{display:none}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="visual">
+      <div><div class="symbol">✺</div><div class="brand">LIVING <b>INDIA</b></div><div class="tag">PEOPLE · CULTURE · STORIES · FOREVER</div></div>
+      <div><h1>Enter<br><i>Living India</i></h1><p>Explore India's traditions, stories, art, music and living heritage — and keep your discoveries with you.</p></div>
+      <div class="motto">SAME ROOTS · A THOUSAND STORIES · ONE INDIA</div>
+    </section>
+    <section class="form">
+      <button class="back" onclick="location.href='./'">← Back to Living India</button>
+      <div class="eyebrow" id="eyebrow">WELCOME BACK</div>
+      <h2 id="title">Sign in</h2>
+      <p class="sub" id="subtitle">Sign in to save discoveries, collect heritage stamps and share stories.</p>
+
+      <form id="authForm">
+        <div id="nameField" class="hidden"><label for="name">FULL NAME</label><input id="name" autocomplete="name" placeholder="Your name" /></div>
+        <label for="email">EMAIL ADDRESS</label>
+        <input id="email" type="email" autocomplete="email" required placeholder="you@example.com" />
+        <div id="passwordField"><label for="password">PASSWORD</label><div class="password-wrap"><input id="password" type="password" minlength="6" autocomplete="current-password" required placeholder="Your password" /><button class="show" type="button" onclick="togglePassword()">Show</button></div></div>
+        <div id="confirmField" class="hidden"><label for="confirm">CONFIRM PASSWORD</label><input id="confirm" type="password" minlength="6" autocomplete="new-password" placeholder="Repeat your password" /></div>
+        <button class="primary" id="submitBtn" type="submit">Sign in →</button>
+      </form>
+
+      <div id="oauthArea">
+        <div class="divider">OR</div>
+        <button class="secondary" type="button" onclick="googleLogin()">Continue with Google</button>
+      </div>
+
+      <div class="links" id="authLinks"><button type="button" onclick="setMode('signup')">Create account</button><button type="button" onclick="setMode('reset')">Forgot password?</button></div>
+      <div class="status" id="status"></div>
+      <div class="foot">Your account helps you continue your heritage journey across Living India.</div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL='https://nbxxknkecpnscirfnov.supabase.co';
+    const SUPABASE_KEY='sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb';
+    const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const redirectUrl=new URL('./',location.href).href;
+    let mode='signin';
+    const $=id=>document.getElementById(id);
+    function msg(text,ok=false){$('status').textContent=text;$('status').className='status'+(ok?' ok':'')}
+    function togglePassword(){const x=$('password');const b=document.querySelector('.show');x.type=x.type==='password'?'text':'password';b.textContent=x.type==='password'?'Show':'Hide'}
+    function setMode(next){
+      mode=next; msg('');
+      const signup=next==='signup', reset=next==='reset';
+      $('eyebrow').textContent=reset?'ACCOUNT RECOVERY':signup?'JOIN THE ARCHIVE':'WELCOME BACK';
+      $('title').textContent=reset?'Reset password':signup?'Create your account':'Sign in';
+      $('subtitle').textContent=reset?'Enter your email and we will send a password reset link.':signup?'Create an account to save discoveries, collect stamps and share heritage stories.':'Sign in to save discoveries, collect heritage stamps and share stories.';
+      $('nameField').classList.toggle('hidden',!signup); $('confirmField').classList.toggle('hidden',!signup); $('passwordField').classList.toggle('hidden',reset); $('oauthArea').classList.toggle('hidden',reset);
+      $('password').required=!reset; $('confirm').required=signup; $('submitBtn').textContent=reset?'Send reset link →':signup?'Create account →':'Sign in →';
+      $('authLinks').innerHTML=reset?'<button type="button" onclick="setMode(\'signin\')">Back to sign in</button>':signup?'<button type="button" onclick="setMode(\'signin\')">Already have an account?</button>':'<button type="button" onclick="setMode(\'signup\')">Create account</button><button type="button" onclick="setMode(\'reset\')">Forgot password?</button>';
+    }
+    async function googleLogin(){
+      msg('Opening Google sign-in…');
+      const {error}=await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:redirectUrl}});
+      if(error)msg(error.message);
+    }
+    $('authForm').addEventListener('submit',async e=>{
+      e.preventDefault(); msg('Please wait…'); $('submitBtn').disabled=true;
+      try{
+        const email=$('email').value.trim();
+        if(mode==='signin'){
+          const {error}=await supabase.auth.signInWithPassword({email,password:$('password').value});
+          if(error)throw error; location.href='./'; return;
+        }
+        if(mode==='signup'){
+          if($('password').value!==$('confirm').value)throw new Error('Passwords do not match.');
+          const {data,error}=await supabase.auth.signUp({email,password:$('password').value,options:{data:{full_name:$('name').value.trim()},emailRedirectTo:redirectUrl}});
+          if(error)throw error;
+          if(data.session){location.href='./';return;}
+          setMode('verify');
+          $('title').textContent='Check your email'; $('subtitle').textContent='We sent a 6-digit verification code to '+email+'. Enter it below.';
+          $('authForm').innerHTML='<label for="otp">6-DIGIT CODE</label><input id="otp" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required placeholder="123456"><button class="primary" type="submit">Verify email →</button>';
+          $('authForm').onsubmit=async ev=>{ev.preventDefault();msg('Verifying…');const {error}=await supabase.auth.verifyOtp({email,token:$('otp').value.trim(),type:'signup'});if(error){msg(error.message);return}location.href='./'};
+          msg('Verification code sent.',true); return;
+        }
+        if(mode==='reset'){
+          const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:redirectUrl+'?reset=1'});
+          if(error)throw error; msg('Password reset link sent. Check your email.',true); return;
+        }
+      }catch(err){msg(err.message||'Something went wrong.')}finally{$('submitBtn').disabled=false}
+    });
+    setMode(new URLSearchParams(location.search).get('mode')==='signup'?'signup':'signin');
+  </script>
+</body>
+</html>
