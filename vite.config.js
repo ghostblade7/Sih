@@ -8,7 +8,8 @@ export default defineConfig({
       input: {
         main: resolve(process.cwd(), 'index.html'),
         login: resolve(process.cwd(), 'login.html'),
-        auth: resolve(process.cwd(), 'auth.html')
+        auth: resolve(process.cwd(), 'auth.html'),
+        auth2: resolve(process.cwd(), 'auth2.html')
       }
     }
   }
