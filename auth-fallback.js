@@ -1,0 +1,30 @@
+/* Living India auth fallback — guarantees the Login button opens even if auth.js fails to initialize. */
+(function(){
+  function style(){
+    if(document.getElementById('li-fallback-style')) return;
+    const s=document.createElement('style'); s.id='li-fallback-style';
+    s.textContent='#li-fallback{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(10,27,27,.78);backdrop-filter:blur(8px)}#li-fallback.open{display:flex}.li-fb-card{width:min(440px,100%);box-sizing:border-box;background:#f8f2e6;color:#173c3b;border:1px solid #c8a96b;border-radius:20px;padding:28px;box-shadow:0 24px 80px rgba(0,0,0,.4);position:relative}.li-fb-card h2{font:700 29px Georgia,serif;text-align:center;margin:8px 0}.li-fb-sub{text-align:center;color:#65706c;font-size:14px;margin:0 0 20px}.li-fb-card label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}.li-fb-card input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #cfc8b9;border-radius:10px;background:#fff;font-size:15px}.li-fb-submit,.li-fb-google{width:100%;padding:13px;border-radius:10px;font-weight:800;cursor:pointer}.li-fb-submit{margin-top:18px;border:0;background:#173c3b;color:#fff}.li-fb-google{margin-top:10px;border:1px solid #bbb;background:#fff;color:#173c3b}.li-fb-links{text-align:center;margin-top:16px;font-size:13px}.li-fb-links button{border:0;background:none;color:#9a6e28;font-weight:800}.li-fb-msg{text-align:center;min-height:20px;margin-top:10px;font-size:13px}.li-fb-close{position:absolute;right:14px;top:10px;border:0;background:none;font-size:25px;color:#173c3b}'; document.head.appendChild(s);
+  }
+  function mount(){
+    if(document.getElementById('li-fallback')) return;
+    style();
+    const r=document.createElement('div'); r.id='li-fallback';
+    r.innerHTML='<div class="li-fb-card"><button class="li-fb-close">×</button><div style="text-align:center;font-size:27px">✺</div><h2>Living India</h2><p class="li-fb-sub">Sign in to continue exploring India’s living heritage.</p><label>Email</label><input id="li-fb-email" type="email" placeholder="you@example.com"><label>Password</label><input id="li-fb-pass" type="password" placeholder="At least 6 characters"><button class="li-fb-submit" id="li-fb-submit">Sign In</button><button class="li-fb-google" id="li-fb-google">Continue with Google</button><div class="li-fb-links"><button id="li-fb-signup">Create account</button> · <button id="li-fb-forgot">Forgot password?</button></div><div class="li-fb-msg" id="li-fb-msg"></div></div>';
+    document.body.appendChild(r);
+    r.querySelector('.li-fb-close').onclick=()=>r.classList.remove('open');
+    r.onclick=e=>{if(e.target===r)r.classList.remove('open')};
+    const msg=(t,err)=>{const m=document.getElementById('li-fb-msg');m.textContent=t;m.style.color=err?'#a33d32':'#52725f'};
+    r.querySelector('#li-fb-submit').onclick=async()=>{
+      if(!window.supabase?.createClient)return msg('Authentication service is unavailable. Please reload once.',true);
+      const email=document.getElementById('li-fb-email').value.trim(),pass=document.getElementById('li-fb-pass').value;
+      if(!email||pass.length<6)return msg('Enter your email and a password of at least 6 characters.',true);
+      const c=window.supabase.createClient('https://nbxxknkecpnscirfnov.supabase.co','sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb');
+      msg('Signing you in…'); const {error}=await c.auth.signInWithPassword({email,password:pass}); if(error)return msg(error.message,true); msg('Signed in successfully!'); setTimeout(()=>r.classList.remove('open'),700);
+    };
+    r.querySelector('#li-fb-google').onclick=async()=>{if(!window.supabase?.createClient)return msg('Authentication service is unavailable. Please reload once.',true);const c=window.supabase.createClient('https://nbxxknkecpnscirfnov.supabase.co','sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb');const {error}=await c.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://ghostblade7.github.io/Sih/'}});if(error)msg(error.message,true)};
+    r.querySelector('#li-fb-forgot').onclick=async()=>{const email=document.getElementById('li-fb-email').value.trim();if(!email)return msg('Enter your email first.',true);if(!window.supabase?.createClient)return msg('Authentication service is unavailable.',true);const c=window.supabase.createClient('https://nbxxknkecpnscirfnov.supabase.co','sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb');const {error}=await c.auth.resetPasswordForEmail(email,{redirectTo:'https://ghostblade7.github.io/Sih/'});msg(error?error.message:'Password reset email sent. Check your inbox.',!!error)};
+  }
+  function open(){mount(); if(typeof window.LivingIndiaAuthOpen==='function'){window.LivingIndiaAuthOpen('signin');return}document.getElementById('li-fallback').classList.add('open');document.getElementById('li-fb-email')?.focus()}
+  function init(){mount();document.addEventListener('click',function(e){const b=e.target.closest?.('button');if(!b)return;const t=(b.textContent||'').replace(/\s+/g,' ').trim();if(b.classList.contains('avatar')||/^♙?\s*Login$/i.test(t)){e.preventDefault();e.stopImmediatePropagation();open()}},true)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
