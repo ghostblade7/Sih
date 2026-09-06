@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { subscribeToAuth } from './firebase.js';
 import './style.css';
-import { Menu, Search, User } from 'lucide-react';
+import { Search, User, Moon, ArrowRight } from 'lucide-react';
 
 const App = () => {
   const [user, setUser] = useState(null);
   const [authLoaded, setAuthLoaded] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToAuth((currentUser) => {
@@ -17,75 +16,99 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
+  const experiences = [
+    { title: "Interactive Explorer", desc: "Explore India's heritage on a dynamic map.", color: "var(--accent-rust)" },
+    { title: "Heritage Gallery", desc: "Discover captivating stories through art.", color: "var(--btn-green)" },
+    { title: "Timeline", desc: "Walk through India's journey across time.", color: "var(--accent-gold)" },
+    { title: "How It's Made", desc: "See the process, meet the craftsmanship.", color: "var(--btn-green)" },
+    { title: "Culture Connections", desc: "Find links between people and places.", color: "var(--accent-rust)" },
+    { title: "You Might Be Surprised", desc: "Amazing facts and untold stories.", color: "var(--accent-gold)" },
+    { title: "Quiz", desc: "Test what you've learned and have fun!", color: "var(--btn-green)" },
+    { title: "Listen & Explore", desc: "Hear the sounds of India's cultures.", color: "var(--accent-rust)" },
+    { title: "Before & After", desc: "See how places have evolved.", color: "var(--btn-green)" },
+    { title: "Heritage Passport", desc: "Complete challenges and collect stamps.", color: "var(--accent-gold)" }
+  ];
+
   return (
-    <div className="app-container">
-      {/* Navigation Layer */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', padding: '24px 5%', alignItems: 'center', borderBottom: '1px solid var(--border-gold)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-teal)' }}>
-            <Menu size={28} />
-          </button>
-          <h1 style={{ margin: 0, fontSize: '24px', letterSpacing: '2px', textTransform: 'uppercase' }}>Living India</h1>
+    <div style={{ padding: '0 4%' }}>
+      {/* NAVBAR */}
+      <nav style={{ display: 'flex', justifyContent: 'space-between', padding: '20px 0', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ color: 'var(--accent-gold)' }}>[Logo Icon]</div>
+          <div>
+            <h1 style={{ fontSize: '20px', letterSpacing: '1px', margin: 0 }}>LIVING INDIA</h1>
+            <p style={{ fontSize: '10px', letterSpacing: '2px', color: '#666', fontFamily: 'var(--font-sans)', textTransform: 'uppercase' }}>People • Places • Stories</p>
+          </div>
         </div>
         
-        <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-          <Search size={24} color="var(--primary-teal)" style={{ cursor: 'pointer' }} />
+        <div className="search-container">
+          <Search size={18} color="#666" />
+          <input type="text" placeholder="Search a heritage, art form, place, or story..." />
+        </div>
+        
+        <div style={{ display: 'flex', gap: '24px', alignItems: 'center', fontFamily: 'var(--font-sans)', fontSize: '14px' }}>
+          <a href="#" style={{ textDecoration: 'none', color: 'var(--text-dark)' }}>Explore</a>
+          <a href="#" style={{ textDecoration: 'none', color: 'var(--text-dark)' }}>About</a>
+          <a href="#" style={{ textDecoration: 'none', color: 'var(--text-dark)' }}>Resources</a>
           
-          {/* Dynamic Auth Button */}
           {authLoaded && (
-            <a 
-              href={user ? "/profile.html" : "/auth.html"} 
-              className="btn-primary"
-              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
-            >
-              <User size={18} />
+            <a href={user ? "/profile.html" : "/auth.html"} className="btn-primary" style={{ textDecoration: 'none' }}>
               {user ? "Profile" : "Login"}
             </a>
           )}
+          <button style={{ background: 'transparent', border: '1px solid #ccc', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer' }}><Moon size={16} /></button>
         </div>
       </nav>
 
-      {/* Burger Menu Overlay */}
-      {menuOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '300px', height: '100vh', backgroundColor: 'var(--bg-ivory)', zIndex: 1000, padding: '24px', boxShadow: '2px 0 12px rgba(0,0,0,0.1)' }}>
-          <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--accent-terracotta)' }}>✕ Close</button>
-          <ul style={{ listStyle: 'none', marginTop: '40px', lineHeight: '2.5', fontFamily: 'var(--font-sans)', fontSize: '18px' }}>
-            <li><a href="#explore" style={{ color: 'var(--text-brown)', textDecoration: 'none' }}>Explore Heritage</a></li>
-            <li><a href="#map" style={{ color: 'var(--text-brown)', textDecoration: 'none' }}>India Map</a></li>
-            <li><a href="#experiences" style={{ color: 'var(--text-brown)', textDecoration: 'none' }}>Experiences</a></li>
-            <li><a href="#risk" style={{ color: 'var(--text-brown)', textDecoration: 'none' }}>Heritage at Risk</a></li>
-          </ul>
-        </div>
-      )}
+      {/* HERO SECTION */}
+      <header style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', padding: '60px 0 100px 0' }}>
+        <div style={{ maxWidth: '500px' }}>
+          <h1 style={{ fontSize: '56px', lineHeight: '1.1', marginBottom: '16px' }}>Explore India's<br/>Living Heritage</h1>
+          <p style={{ fontSize: '20px', marginBottom: '32px' }}>Art forms. Stories. People. Places.</p>
+          
+          <p style={{ fontSize: '16px', lineHeight: '1.6', marginBottom: '32px', color: '#444' }}>
+            Journey through the diverse cultures, traditions and histories that make India extraordinary.
+          </p>
 
-      {/* Hero Section */}
-      <header style={{ padding: '120px 5%', textAlign: 'center', backgroundColor: 'var(--primary-teal)', color: 'var(--bg-parchment)' }}>
-        <h2 style={{ fontSize: '14px', letterSpacing: '4px', textTransform: 'uppercase', color: 'var(--muted-gold)', marginBottom: '16px' }}>Explore • Experience • Connect</h2>
-        <h1 style={{ fontSize: '48px', color: 'var(--bg-ivory)', marginBottom: '24px' }}>Same Roots. A Thousand Stories. One India.</h1>
-        <p style={{ maxWidth: '600px', margin: '0 auto', fontSize: '18px', fontFamily: 'var(--font-sans)', lineHeight: '1.6', opacity: 0.9 }}>
-          Immerse yourself in the architecture, arts, and traditions that shape our heritage.
-        </p>
+          <div style={{ borderLeft: '2px solid var(--accent-gold)', paddingLeft: '16px', fontStyle: 'italic', color: '#555' }}>
+            <p>“A civilization is not what it leaves in its museums, but what it lives in its people.”</p>
+            <p style={{ fontSize: '12px', marginTop: '8px', fontStyle: 'normal', letterSpacing: '1px' }}>— UNKNOWN</p>
+          </div>
+        </div>
+
+        {/* Map / Illustration Placeholder */}
+        <div style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+            <p style={{ fontFamily: 'var(--font-script)', fontSize: '42px', color: 'var(--text-dark)', transform: 'rotate(-5deg)' }}>
+              Many Cultures<br/>One Incredible<br/>India
+            </p>
+          </div>
+        </div>
       </header>
 
-      {/* Heritage Categories */}
-      <section id="explore" style={{ padding: '80px 5%' }}>
-        <h3 style={{ textAlign: 'center', marginBottom: '40px', fontSize: '32px' }}>Discover by Category</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
-          {/* Example Cards */}
-          {['Dance', 'Architecture', 'Textiles', 'Spiritual Traditions'].map(cat => (
-            <div key={cat} className="heritage-card" style={{ padding: '32px', textAlign: 'center' }}>
-              <h4 style={{ color: 'var(--accent-rust)', fontSize: '20px' }}>{cat}</h4>
-              <p style={{ marginTop: '12px', fontSize: '14px', fontFamily: 'var(--font-sans)' }}>Explore the rich {cat.toLowerCase()} of India.</p>
+      {/* 10 WAYS GRID */}
+      <section style={{ paddingBottom: '80px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+          <div style={{ height: '1px', flex: 1, backgroundColor: '#d0c6b4' }}></div>
+          <h3 style={{ fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'var(--font-sans)' }}>Ten Ways to Experience Heritage</h3>
+          <div style={{ height: '1px', flex: 1, backgroundColor: '#d0c6b4' }}></div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px' }}>
+          {experiences.map((exp, idx) => (
+            <div key={idx} className="experience-card">
+              <div className="card-img-placeholder"></div>
+              <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <h4 style={{ fontSize: '18px', marginBottom: '8px' }}>{exp.title}</h4>
+                <p style={{ fontSize: '13px', color: '#666', marginBottom: '16px', flex: 1 }}>{exp.desc}</p>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button className="btn-icon" style={{ backgroundColor: exp.color }}>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* Interactive Map Placeholder */}
-      <section id="map" style={{ padding: '80px 5%', backgroundColor: 'var(--bg-ivory)' }}>
-        <h3 style={{ textAlign: 'center', marginBottom: '40px', fontSize: '32px' }}>Interactive India Map</h3>
-        <div className="ornamental-border" style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-parchment)' }}>
-           <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--primary-teal)' }}>[ react-simple-maps TopoJSON Implementation Goes Here ]</p>
         </div>
       </section>
     </div>
