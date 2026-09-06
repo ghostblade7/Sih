@@ -20,7 +20,7 @@
 <div class="avatar" id="avatar"><img id="avatarImg" alt="Profile picture"><span>✦</span></div>
 <label class="photo-btn" for="photoInput">📷 Change profile picture</label>
 <input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp">
-<div class="photo-help">JPG, PNG or WEBP · max 5 MB · saved to your account</div>
+<div class="photo-help">JPG, PNG or WEBP · max 5 MB · saved on this device</div>
 </div>
 <div>
 <div class="eyebrow">MY HERITAGE JOURNEY</div>
@@ -41,40 +41,41 @@
 <script type="module">
 import {initializeApp} from 'firebase/app'
 import {getAuth,onAuthStateChanged,signOut,reload} from 'firebase/auth'
-import {getStorage,ref,uploadBytes,getDownloadURL} from 'firebase/storage'
 const firebaseConfig={apiKey:'AIzaSyCeuizWkJRvp2_iOxD4UOFL12Os2k0KybQ',authDomain:'living-india-7f73b.firebaseapp.com',projectId:'living-india-7f73b',storageBucket:'living-india-7f73b.firebasestorage.app',messagingSenderId:'439601825953',appId:'1:439601825953:web:cc38c29d819b86de03c8e0',measurementId:'G-N76WYJXS7K'}
-const app=initializeApp(firebaseConfig);const auth=getAuth(app);const storage=getStorage(app);
+const auth=getAuth(initializeApp(firebaseConfig));
 const $=id=>document.getElementById(id);const home=new URL('./',location.href).href;
 $('home').onclick=$('home2').onclick=()=>location.href=home;
 function setPhoto(url){$('avatarImg').src=url;$('avatar').classList.add('has-photo')}
 function photoKey(uid){return `li-profile-photo:${uid}`}
-function loadLocalPhoto(uid){const photo=localStorage.getItem(photoKey(uid));if(photo)setPhoto(photo)}
-async function loadCloudPhoto(user){
- try{const url=await getDownloadURL(ref(storage,`profilePictures/${user.uid}`));setPhoto(url);return true}catch{return false}
-}
-$('photoInput').onchange=async()=>{
+function loadPhoto(uid){const photo=localStorage.getItem(photoKey(uid));if(photo)setPhoto(photo)}
+$('photoInput').onchange=()=>{
  const file=$('photoInput').files?.[0];if(!file)return;
  if(file.size>5*1024*1024){$('status').textContent='Photo must be smaller than 5 MB.';$('photoInput').value='';return}
  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){$('status').textContent='Please choose a JPG, PNG or WEBP image.';$('photoInput').value='';return}
- const user=auth.currentUser;if(!user){$('status').textContent='Please sign in again.';return}
- $('status').textContent='Uploading profile picture…';
- try{
-   const fileRef=ref(storage,`profilePictures/${user.uid}`);
-   await uploadBytes(fileRef,file,{contentType:file.type,cacheControl:'public,max-age=3600'});
-   const url=await getDownloadURL(fileRef);setPhoto(url);localStorage.setItem(photoKey(user.uid),url);$('status').textContent='Profile picture updated and saved to your account.';
- }catch(err){
-   console.error(err);
-   $('status').textContent='Upload failed. Make sure Firebase Storage is enabled for this project.';
- }
- $('photoInput').value='';
+ const user=auth.currentUser;if(!user){$('status').textContent='Please sign in again.';$('photoInput').value='';return}
+ $('status').textContent='Saving profile picture…';
+ const reader=new FileReader();
+ reader.onload=()=>{
+   try{
+     localStorage.setItem(photoKey(user.uid),reader.result);
+     setPhoto(reader.result);
+     $('status').textContent='Profile picture updated successfully.';
+   }catch(err){
+     console.error(err);
+     $('status').textContent='Could not save this photo. Try a smaller image.';
+   }
+   $('photoInput').value='';
+ };
+ reader.onerror=()=>{$('status').textContent='Could not read the image. Please try again.';$('photoInput').value=''};
+ reader.readAsDataURL(file);
 };
 onAuthStateChanged(auth,async user=>{
  if(!user){location.replace('./auth3.html');return}
  try{await reload(user)}catch{}
  const display=user.displayName||user.email?.split('@')[0]||'Heritage Explorer';
  $('name').textContent=display;$('email').textContent=user.email||'';
+ loadPhoto(user.uid);
  if(!$('avatar').classList.contains('has-photo'))$('avatar').querySelector('span').textContent=display.charAt(0).toUpperCase();
- loadLocalPhoto(user.uid);await loadCloudPhoto(user);
  $('verified').textContent=user.emailVerified?'✓ EMAIL VERIFIED':'EMAIL NOT VERIFIED';
  if(!user.emailVerified){$('verified').style.background='#f7e7df';$('verified').style.color='#a64b32'}
  const stamps=Number(localStorage.getItem('li-passport-stamps')||0);$('stamps').textContent=stamps?`${stamps} heritage stamp${stamps===1?'':'s'} collected.`:'0 stamps collected. Start exploring to build your cultural journey.';
