@@ -2,13 +2,23 @@ import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://nbxxknkecpnscirfnov.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb'
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+})
 
 const $ = id => document.getElementById(id)
 const home = new URL('./', location.href).href
-const loginUrl = new URL('./auth2.html', location.href).href
+const loginUrl = new URL('./auth3.html', location.href).href
 let state = 'signin'
 let pendingEmail = sessionStorage.getItem('li-pending-email') || ''
+
+function friendlyError(err) {
+  const msg = String(err?.message || err || '').trim()
+  if (/failed to fetch|load failed|networkerror|network request failed/i.test(msg)) {
+    return 'Cannot reach the authentication server. Please check your internet connection and try again.'
+  }
+  return msg || 'Something went wrong. Please try again.'
+}
 
 function status(text, ok = false) {
   const el = $('status')
@@ -20,10 +30,9 @@ function status(text, ok = false) {
 
 function showPass() {
   const x = $('password')
-  const buttons = document.querySelectorAll('.show')
   if (!x) return
   x.type = x.type === 'password' ? 'text' : 'password'
-  buttons.forEach(b => { b.textContent = x.type === 'password' ? 'Show' : 'Hide' })
+  document.querySelectorAll('.show').forEach(b => { b.textContent = x.type === 'password' ? 'Show' : 'Hide' })
 }
 
 function render(next) {
@@ -69,14 +78,11 @@ async function submit(e) {
   e.preventDefault()
   const btn = $('submit')
   if (btn) btn.disabled = true
-  status('Please wait…')
+  status('Connecting…')
 
   try {
     if (state === 'signin') {
-      const { error } = await sb.auth.signInWithPassword({
-        email: $('email').value.trim(),
-        password: $('password').value
-      })
+      const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('password').value })
       if (error) throw error
       location.href = home
       return
@@ -87,20 +93,13 @@ async function submit(e) {
       if (password !== $('confirm').value) throw new Error('Passwords do not match.')
       pendingEmail = $('email').value.trim()
       sessionStorage.setItem('li-pending-email', pendingEmail)
-
       const { data, error } = await sb.auth.signUp({
         email: pendingEmail,
         password,
-        options: {
-          data: { full_name: $('name').value.trim() },
-          emailRedirectTo: loginUrl
-        }
+        options: { data: { full_name: $('name').value.trim() }, emailRedirectTo: loginUrl }
       })
       if (error) throw error
-      if (data.session) {
-        location.href = home
-        return
-      }
+      if (data.session) { location.href = home; return }
       render('verify')
       status('Verification code sent. Check your email.', true)
       return
@@ -133,7 +132,8 @@ async function submit(e) {
       setTimeout(() => { location.href = home }, 600)
     }
   } catch (err) {
-    status(err?.message || 'Something went wrong.')
+    console.error('[Living India Auth]', err)
+    status(friendlyError(err))
   } finally {
     if ($('submit')) $('submit').disabled = false
   }
@@ -141,31 +141,38 @@ async function submit(e) {
 
 async function googleLogin() {
   status('Opening Google sign-in…')
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: home }
-  })
-  if (error) status(error.message)
+  try {
+    const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: home } })
+    if (error) throw error
+  } catch (err) {
+    console.error('[Living India Google Auth]', err)
+    status(friendlyError(err))
+  }
 }
 
+$('back')?.addEventListener('click', () => { location.href = home })
 $('showPass')?.addEventListener('click', showPass)
 $('googleBtn')?.addEventListener('click', googleLogin)
 $('form')?.addEventListener('submit', submit)
 
 ;(async () => {
+  const params = new URLSearchParams(location.search)
+  // Always render the UI first. A temporary Supabase/network problem must not make
+  // the Create account / Google controls appear dead.
+  render(params.get('mode') === 'signup' ? 'signup' : 'signin')
+
   try {
-    const { data } = await sb.auth.getSession()
-    const params = new URLSearchParams(location.search)
+    const { data, error } = await sb.auth.getSession()
+    if (error) throw error
     if (params.get('reset') === '1' && data.session) {
       render('recovery')
       return
     }
     if (data.session) {
       location.href = home
-      return
     }
-    render(params.get('mode') === 'signup' ? 'signup' : 'signin')
   } catch (err) {
-    status('Authentication service could not be loaded. Please refresh and try again.')
+    console.error('[Living India Auth Session]', err)
+    status('Account service is temporarily unreachable. The form is ready; please try again in a moment.')
   }
 })()
