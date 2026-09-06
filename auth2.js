@@ -9,8 +9,7 @@ import {
   sendPasswordResetEmail,
   setPersistence,
   signInWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut,
   updateProfile,
   reload,
@@ -37,6 +36,7 @@ setPersistence(auth, browserLocalPersistence).catch(() => {})
 const $ = id => document.getElementById(id)
 const home = new URL('./', location.href).href
 const loginUrl = new URL('./auth3.html', location.href).href
+const baseFormHTML = $('form')?.innerHTML || ''
 let state = 'signin'
 let pendingEmail = sessionStorage.getItem('li-pending-email') || ''
 let resetCode = ''
@@ -49,7 +49,9 @@ function friendlyError(err) {
     'auth/email-already-in-use': 'An account with this email already exists. Please sign in.',
     'auth/weak-password': 'Password should be at least 6 characters.',
     'auth/invalid-email': 'Please enter a valid email address.',
-    'auth/popup-blocked': 'Google sign-in was blocked by the browser. Please try again.',
+    'auth/popup-blocked': 'Google sign-in was blocked by the browser. Please allow pop-ups and try again.',
+    'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
+    'auth/cancelled-popup-request': 'Google sign-in was cancelled. Please try again.',
     'auth/network-request-failed': 'Cannot reach the account service. Please check your connection and try again.',
     'auth/too-many-requests': 'Too many attempts. Please wait a little and try again.',
     'auth/user-disabled': 'This account has been disabled.',
@@ -77,6 +79,13 @@ function showPass() {
   document.querySelectorAll('.show').forEach(b => { b.textContent = x.type === 'password' ? 'Show' : 'Hide' })
 }
 
+function restoreBaseForm() {
+  if (!$('nameBox') || !$('emailBox') || !$('passBox')) {
+    $('form').innerHTML = baseFormHTML
+  }
+  $('showPass')?.addEventListener('click', showPass)
+}
+
 function wireLinks() {
   $('links')?.querySelectorAll('[data-mode]').forEach(btn => {
     btn.addEventListener('click', () => render(btn.dataset.mode))
@@ -90,17 +99,19 @@ function render(next) {
   const verify = next === 'verify'
   const recovery = next === 'recovery'
 
+  if (!verify && !recovery) restoreBaseForm()
+
   $('ey').textContent = recovery ? 'SECURE ACCOUNT' : reset ? 'ACCOUNT RECOVERY' : signup ? 'JOIN THE ARCHIVE' : verify ? 'EMAIL VERIFICATION' : 'WELCOME BACK'
   $('title').textContent = recovery ? 'Choose a new password' : reset ? 'Reset password' : signup ? 'Create your account' : verify ? 'Check your email' : 'Sign in'
   $('sub').textContent = recovery ? 'Enter a new password for your Living India account.' : reset ? 'Enter your email and we will send a secure reset link.' : signup ? 'Create an account and verify your email before entering Living India.' : verify ? 'We sent a verification link to your email. Open it, then return here to sign in.' : 'Sign in to save discoveries, collect heritage stamps and share stories.'
 
-  $('nameBox').classList.toggle('hidden', !signup)
-  $('emailBox').classList.toggle('hidden', verify || recovery)
-  $('passBox').classList.toggle('hidden', reset || verify || recovery)
-  $('confirmBox').classList.toggle('hidden', !signup && !recovery)
-  $('google').classList.toggle('hidden', reset || verify || recovery)
-  $('otpNote').classList.toggle('hidden', !verify)
-  if (verify) $('otpNote').textContent = 'A verification link has been sent to your email.'
+  $('nameBox')?.classList.toggle('hidden', !signup)
+  $('emailBox')?.classList.toggle('hidden', verify || recovery)
+  $('passBox')?.classList.toggle('hidden', reset || verify || recovery)
+  $('confirmBox')?.classList.toggle('hidden', !signup && !recovery)
+  $('google')?.classList.toggle('hidden', reset || verify || recovery)
+  $('otpNote')?.classList.toggle('hidden', !verify)
+  if (verify && $('otpNote')) $('otpNote').textContent = 'A verification link has been sent to your email. Check Spam or Promotions too.'
 
   $('links').innerHTML = (reset || verify || recovery)
     ? '<button type="button" data-mode="signin">Back to sign in</button>'
@@ -137,12 +148,16 @@ async function submit(e) {
       if (!credential.user.emailVerified) {
         pendingEmail = credential.user.email || ''
         sessionStorage.setItem('li-pending-email', pendingEmail)
+        await sendEmailVerification(credential.user, {
+          url: loginUrl + '?verified=1',
+          handleCodeInApp: true
+        })
         await signOut(auth)
         render('verify')
-        status('Please verify your email first. Check your inbox.', true)
+        status('Your email is not verified yet. We sent a fresh verification link.', true)
         return
       }
-      location.href = home
+      location.replace(home)
       return
     }
 
@@ -160,12 +175,13 @@ async function submit(e) {
       sessionStorage.setItem('li-pending-email', pendingEmail)
       await signOut(auth)
       render('verify')
-      status('Verification email sent. Check your inbox.', true)
+      status('Verification email sent. Check Inbox, Spam and Promotions.', true)
       return
     }
 
     if (state === 'verify') {
       render('signin')
+      $('email').value = pendingEmail
       status('After clicking the verification link, sign in with your email and password.', true)
       return
     }
@@ -198,20 +214,21 @@ async function submit(e) {
 }
 
 async function resendVerification() {
-  const email = pendingEmail || $('verifyEmail')?.value?.trim()
-  if (!email) {
+  if (!pendingEmail) {
     render('signin')
-    status('Sign in first, then we can send a new verification email.')
+    status('Enter your email and password to send a new verification link.')
     return
   }
   render('signin')
-  status('Sign in with your email and password to resend the verification email.')
+  $('email').value = pendingEmail
+  status('Sign in with your password. If your email is still unverified, a fresh verification link will be sent automatically.')
 }
 
 async function googleLogin() {
   status('Opening Google sign-in…')
   try {
-    await signInWithRedirect(auth, googleProvider)
+    const result = await signInWithPopup(auth, googleProvider)
+    if (result?.user) location.replace(home)
   } catch (err) {
     console.error('[Living India Firebase Google]', err)
     status(friendlyError(err))
@@ -233,22 +250,12 @@ $('form')?.addEventListener('submit', submit)
   render(actionMode === 'signup' ? 'signup' : 'signin')
 
   try {
-    const redirectResult = await getRedirectResult(auth)
-    if (redirectResult?.user) {
-      location.href = home
-      return
-    }
-  } catch (err) {
-    console.error('[Living India Firebase Redirect]', err)
-    status(friendlyError(err))
-  }
-
-  try {
     if (oobCode && actionMode === 'verifyEmail') {
       await applyActionCode(auth, oobCode)
       pendingEmail = sessionStorage.getItem('li-pending-email') || ''
       sessionStorage.removeItem('li-pending-email')
       render('signin')
+      if (pendingEmail) $('email').value = pendingEmail
       status('Email verified successfully. You can now sign in.', true)
       return
     }
@@ -263,7 +270,8 @@ $('form')?.addEventListener('submit', submit)
 
     if (verified) {
       render('signin')
-      status('Your email verification link was opened. You can now sign in.', true)
+      if (pendingEmail) $('email').value = pendingEmail
+      status('Your verification link was opened. Sign in now to continue.', true)
       return
     }
   } catch (err) {
@@ -277,7 +285,7 @@ $('form')?.addEventListener('submit', submit)
     try {
       await reload(user)
       if (user.providerData.some(p => p.providerId === 'google.com') || user.emailVerified) {
-        location.href = home
+        location.replace(home)
       }
     } catch (err) {
       console.error('[Living India Firebase Session]', err)
