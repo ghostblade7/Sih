@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = 'https://nbxxknkecpnscirfnov.supabase.co'
+// Browser traffic goes through the Cloudflare Worker so users do not need
+// direct DNS reachability to the Supabase *.supabase.co hostname.
+const SUPABASE_URL = 'https://living-india.khalidhasanmolla38.workers.dev'
 const SUPABASE_KEY = 'sb_publishable_OxxgbDWRCVy3LPM69E_ydA_ybhkXURb'
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
@@ -15,7 +17,7 @@ let pendingEmail = sessionStorage.getItem('li-pending-email') || ''
 function friendlyError(err) {
   const msg = String(err?.message || err || '').trim()
   if (/failed to fetch|load failed|networkerror|network request failed/i.test(msg)) {
-    return 'Cannot reach the authentication server. Please check your internet connection and try again.'
+    return 'Cannot reach the account service. Please try again in a moment.'
   }
   return msg || 'Something went wrong. Please try again.'
 }
@@ -157,8 +159,6 @@ $('form')?.addEventListener('submit', submit)
 
 ;(async () => {
   const params = new URLSearchParams(location.search)
-  // Always render the UI first. A temporary Supabase/network problem must not make
-  // the Create account / Google controls appear dead.
   render(params.get('mode') === 'signup' ? 'signup' : 'signin')
 
   try {
@@ -168,9 +168,7 @@ $('form')?.addEventListener('submit', submit)
       render('recovery')
       return
     }
-    if (data.session) {
-      location.href = home
-    }
+    if (data.session) location.href = home
   } catch (err) {
     console.error('[Living India Auth Session]', err)
     status('Account service is temporarily unreachable. The form is ready; please try again in a moment.')
