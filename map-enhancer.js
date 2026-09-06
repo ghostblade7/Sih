@@ -15,10 +15,10 @@ const STYLE = `
 .li-real-map{position:relative;width:100%;min-height:620px;border:1px solid rgba(117,70,39,.28);background:linear-gradient(145deg,#f5ead4,#ead9b9);overflow:hidden;border-radius:18px;box-shadow:inset 0 0 70px rgba(90,52,30,.08)}
 .li-real-map svg{display:block;width:100%;height:620px;touch-action:none;cursor:grab}
 .li-real-map svg:active{cursor:grabbing}
-.li-map-toolbar{position:absolute;right:16px;top:16px;display:flex;gap:7px;z-index:4;background:rgba(248,239,218,.94);border:1px solid rgba(101,62,37,.25);border-radius:12px;padding:6px;box-shadow:0 8px 22px rgba(63,37,21,.12)}
+.li-map-toolbar{position:absolute;right:16px;top:16px;display:flex;gap:7px;z-index:20;background:rgba(248,239,218,.94);border:1px solid rgba(101,62,37,.25);border-radius:12px;padding:6px;box-shadow:0 8px 22px rgba(63,37,21,.12)}
 .li-map-toolbar button{width:42px;height:42px;border:1px solid rgba(101,62,37,.2);border-radius:9px;background:#f9f0df;color:#50301f;font-size:21px;font-weight:700;cursor:pointer}
 .li-map-toolbar button:hover{background:#ead5ad}
-.li-map-title{position:absolute;left:18px;top:16px;z-index:4;padding:10px 14px;border-radius:12px;background:rgba(248,239,218,.94);border:1px solid rgba(101,62,37,.2);color:#50301f;pointer-events:none}
+.li-map-title{position:absolute;left:18px;top:16px;z-index:20;padding:10px 14px;border-radius:12px;background:rgba(248,239,218,.94);border:1px solid rgba(101,62,37,.2);color:#50301f;pointer-events:none}
 .li-map-title b{display:block;font-size:15px;letter-spacing:.08em;text-transform:uppercase}.li-map-title small{display:block;margin-top:2px;opacity:.7;font-size:11px}
 .li-state{stroke:#76502f;stroke-width:.8;fill:#d9b87e;fill-opacity:.8;vector-effect:non-scaling-stroke;cursor:pointer;transition:fill-opacity .15s,stroke-width .15s}
 .li-state:hover{fill:#b96f3f;fill-opacity:.95;stroke:#63351f;stroke-width:1.7}
@@ -26,7 +26,7 @@ const STYLE = `
 .li-state-label{font-family:Georgia,serif;font-size:10px;font-weight:700;fill:#4d2d1d;paint-order:stroke;stroke:#f5ead4;stroke-width:3px;stroke-linejoin:round;pointer-events:none;text-anchor:middle}
 .li-state-label.small{font-size:8px}
 .li-map-hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:3;padding:7px 12px;border-radius:999px;background:rgba(80,48,31,.9);color:#f9efd9;font-size:11px;letter-spacing:.03em;pointer-events:none;white-space:nowrap}
-.li-category-overlay{position:absolute;inset:0;z-index:10;display:none;align-items:flex-end;justify-content:center;padding:18px;background:rgba(40,24,14,.2)}
+.li-category-overlay{position:absolute;inset:0;z-index:30;display:none;align-items:flex-end;justify-content:center;padding:18px;background:rgba(40,24,14,.2)}
 .li-category-overlay.open{display:flex}
 .li-category-panel{width:min(520px,calc(100% - 24px));max-height:78%;overflow:auto;background:#f8eedb;border:1px solid rgba(101,62,37,.28);border-radius:18px;padding:20px;box-shadow:0 18px 55px rgba(44,25,14,.3)}
 .li-category-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:15px}.li-category-head h3{margin:0;color:#50301f;font:700 24px Georgia,serif}.li-category-head p{margin:5px 0 0;color:#80644f;font-size:12px}.li-category-close{border:0;background:transparent;color:#50301f;font-size:28px;cursor:pointer;line-height:1}
@@ -34,7 +34,7 @@ const STYLE = `
 @media(max-width:700px){.li-real-map{min-height:480px}.li-real-map svg{height:480px}.li-map-title{left:10px;top:10px}.li-map-toolbar{right:10px;top:10px}.li-map-toolbar button{width:38px;height:38px}.li-map-hint{font-size:10px;max-width:90%;overflow:hidden;text-overflow:ellipsis}.li-category-grid{grid-template-columns:1fr}.li-category-panel{padding:16px}}
 `;
 
-let started = false;
+let d3Promise = null;
 
 function injectStyle(){
   if(document.getElementById("li-real-map-style")) return;
@@ -44,8 +44,9 @@ function injectStyle(){
   document.head.appendChild(style);
 }
 
-function getMapHost(){
-  return document.querySelector(".culture-map");
+function getD3(){
+  if(!d3Promise) d3Promise=import(D3_GEO_URL);
+  return d3Promise;
 }
 
 function stateName(feature){
@@ -53,9 +54,9 @@ function stateName(feature){
   return p.ST_NM || p.NAME_1 || p.name || p.State || p.state || "Indian Region";
 }
 
-function makeMap(host,d3,geo){
-  if(!host || host.dataset.realMapReady) return;
-  host.dataset.realMapReady="1";
+function makeMap(host,d3){
+  if(!host || host.dataset.realMapReady || host.dataset.realMapLoading) return;
+  host.dataset.realMapLoading="1";
   host.innerHTML="";
   host.className="culture-map li-real-map";
 
@@ -72,9 +73,9 @@ function makeMap(host,d3,geo){
   const svg=d3.select(host).append("svg").attr("viewBox","0 0 1000 620").attr("role","img").attr("aria-label","Clickable map of India by state and union territory");
   const root=svg.append("g");
   const path=d3.geoPath();
-  const mapWidth=1000,mapHeight=620;
 
   const showCategories=(name)=>{
+    host.querySelectorAll(".li-category-overlay").forEach(x=>x.remove());
     const overlay=document.createElement("div");
     overlay.className="li-category-overlay open";
     overlay.innerHTML=`<div class="li-category-panel" role="dialog" aria-modal="true"><div class="li-category-head"><div><h3>${name}</h3><p>Choose how you want to explore this region.</p></div><button class="li-category-close" type="button" aria-label="Close">×</button></div><div class="li-category-grid">${CATEGORY_LABELS.map(([label,icon])=>`<button class="li-category" type="button"><span>${icon}</span><strong>${label}</strong></button>`).join("")}</div></div>`;
@@ -84,14 +85,14 @@ function makeMap(host,d3,geo){
     overlay.querySelectorAll(".li-category").forEach(btn=>btn.addEventListener("click",()=>{
       overlay.querySelectorAll(".li-category").forEach(x=>x.classList.remove("selected"));
       btn.classList.add("selected");
-      btn.querySelector("strong").textContent += " · Coming next";
     }));
   };
 
-  fetch(INDIA_GEOJSON)
+  fetch(INDIA_GEOJSON,{cache:"force-cache"})
     .then(r=>{if(!r.ok) throw new Error("Map data failed"); return r.json()})
     .then(data=>{
       const features=(data.features||[]).filter(f=>f.geometry);
+      if(!features.length) throw new Error("No India boundary features found");
       const collection={type:"FeatureCollection",features};
       const projection=d3.geoMercator().fitExtent([[45,45],[955,575]],collection);
       path.projection(projection);
@@ -102,7 +103,7 @@ function makeMap(host,d3,geo){
         .attr("class","li-state")
         .attr("d",path)
         .attr("tabindex",0)
-        .attr("aria-label",stateName)
+        .attr("aria-label",d=>stateName(d))
         .on("click",function(event,d){
           event.stopPropagation();
           root.selectAll("path").classed("selected",false);
@@ -121,32 +122,36 @@ function makeMap(host,d3,geo){
 
       const zoom=d3.zoom().scaleExtent([1,8]).on("zoom",event=>root.attr("transform",event.transform));
       svg.call(zoom);
-      toolbar.querySelector('[data-zoom="in"]').onclick=()=>svg.transition().call(zoom.scaleBy,1.5);
-      toolbar.querySelector('[data-zoom="out"]').onclick=()=>svg.transition().call(zoom.scaleBy,0.67);
-      toolbar.querySelector('[data-zoom="reset"]').onclick=()=>svg.transition().call(zoom.transform,d3.zoomIdentity);
+      toolbar.querySelector('[data-zoom="in"]').onclick=()=>svg.transition().duration(180).call(zoom.scaleBy,1.5);
+      toolbar.querySelector('[data-zoom="out"]').onclick=()=>svg.transition().duration(180).call(zoom.scaleBy,0.67);
+      toolbar.querySelector('[data-zoom="reset"]').onclick=()=>svg.transition().duration(220).call(zoom.transform,d3.zoomIdentity);
+      host.dataset.realMapReady="1";
+      delete host.dataset.realMapLoading;
     })
-    .catch(()=>{
-      host.innerHTML='<div style="padding:32px;text-align:center;color:#50301f;font-family:Georgia,serif"><h3>India map could not load</h3><p>Please refresh once the map data connection is available.</p></div>';
+    .catch(err=>{
+      delete host.dataset.realMapLoading;
+      console.error("Living India map data error",err);
+      host.innerHTML='<div style="padding:32px;text-align:center;color:#50301f;font-family:Georgia,serif"><h3>India map could not load</h3><p>Please refresh once the map data connection is available.</p><button type="button" class="li-map-retry" style="margin-top:12px;padding:10px 16px;border:1px solid rgba(101,62,37,.25);border-radius:9px;background:#f9f0df;color:#50301f;cursor:pointer">Retry map</button></div>';
+      host.querySelector(".li-map-retry")?.addEventListener("click",()=>makeMap(host,d3));
     });
 }
 
-async function initRealMap(){
-  if(started) return;
+async function initRealMap(host){
+  if(!host || host.dataset.realMapReady || host.dataset.realMapLoading) return;
   injectStyle();
-  const host=getMapHost();
-  if(!host) return;
-  started=true;
   try{
-    const d3=await import(D3_GEO_URL);
-    makeMap(host,d3,d3);
+    const d3=await getD3();
+    makeMap(host,d3);
   }catch(err){
-    started=false;
     console.error("Living India map error",err);
+    delete host.dataset.realMapLoading;
   }
 }
 
-const observer=new MutationObserver(()=>{
-  if(getMapHost() && !getMapHost().dataset.realMapReady) initRealMap();
-});
+function scanMaps(){
+  document.querySelectorAll(".culture-map").forEach(host=>initRealMap(host));
+}
+
+const observer=new MutationObserver(scanMaps);
 observer.observe(document.body,{childList:true,subtree:true});
-initRealMap();
+scanMaps();
