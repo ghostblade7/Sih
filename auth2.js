@@ -13,7 +13,10 @@ import {
   getRedirectResult,
   signOut,
   updateProfile,
-  reload
+  reload,
+  applyActionCode,
+  verifyPasswordResetCode,
+  confirmPasswordReset
 } from 'firebase/auth'
 
 const firebaseConfig = {
@@ -33,8 +36,10 @@ setPersistence(auth, browserLocalPersistence).catch(() => {})
 
 const $ = id => document.getElementById(id)
 const home = new URL('./', location.href).href
+const loginUrl = new URL('./auth3.html', location.href).href
 let state = 'signin'
 let pendingEmail = sessionStorage.getItem('li-pending-email') || ''
+let resetCode = ''
 
 function friendlyError(err) {
   const code = String(err?.code || '')
@@ -49,7 +54,10 @@ function friendlyError(err) {
     'auth/too-many-requests': 'Too many attempts. Please wait a little and try again.',
     'auth/user-disabled': 'This account has been disabled.',
     'auth/operation-not-allowed': 'This sign-in method is not enabled in Firebase.',
-    'auth/unauthorized-domain': 'This website domain is not authorised in Firebase.'
+    'auth/unauthorized-domain': 'This website domain is not authorised in Firebase.',
+    'auth/invalid-action-code': 'This email link is invalid or has expired. Please request a new one.',
+    'auth/expired-action-code': 'This email link has expired. Please request a new one.',
+    'auth/user-not-found': 'No account was found for that email.'
   }
   return messages[code] || String(err?.message || err || 'Something went wrong. Please try again.')
 }
@@ -83,8 +91,8 @@ function render(next) {
   const recovery = next === 'recovery'
 
   $('ey').textContent = recovery ? 'SECURE ACCOUNT' : reset ? 'ACCOUNT RECOVERY' : signup ? 'JOIN THE ARCHIVE' : verify ? 'EMAIL VERIFICATION' : 'WELCOME BACK'
-  $('title').textContent = recovery ? 'Check your email' : reset ? 'Reset password' : signup ? 'Create your account' : verify ? 'Verify your email' : 'Sign in'
-  $('sub').textContent = recovery ? 'Use the secure link in your email to choose a new password.' : reset ? 'Enter your email and we will send a password reset link.' : signup ? 'Create an account and verify your email before entering Living India.' : verify ? 'We sent a verification link to your email. Open it, then return here.' : 'Sign in to save discoveries, collect heritage stamps and share stories.'
+  $('title').textContent = recovery ? 'Choose a new password' : reset ? 'Reset password' : signup ? 'Create your account' : verify ? 'Check your email' : 'Sign in'
+  $('sub').textContent = recovery ? 'Enter a new password for your Living India account.' : reset ? 'Enter your email and we will send a secure reset link.' : signup ? 'Create an account and verify your email before entering Living India.' : verify ? 'We sent a verification link to your email. Open it, then return here to sign in.' : 'Sign in to save discoveries, collect heritage stamps and share stories.'
 
   $('nameBox').classList.toggle('hidden', !signup)
   $('emailBox').classList.toggle('hidden', verify || recovery)
@@ -105,8 +113,8 @@ function render(next) {
     $('form').innerHTML = '<label>EMAIL</label><input id="verifyEmail" type="email" readonly><button class="primary" id="verifyBtn" type="submit">I have verified my email →</button><button class="secondary" id="resendBtn" type="button">Resend verification email</button>'
     $('verifyEmail').value = pendingEmail
   } else if (recovery) {
-    $('form').innerHTML = '<p class="sub" style="margin-top:0">Open the reset link from your email to return here and set a new password.</p>'
-    $('submit').textContent = 'Continue →'
+    $('form').innerHTML = '<label>NEW PASSWORD</label><div class="pw"><input id="password" type="password" minlength="6" required autocomplete="new-password"><button class="show" id="showPass" type="button">Show</button></div><label>CONFIRM NEW PASSWORD</label><input id="confirm" type="password" minlength="6" required autocomplete="new-password"><button class="primary" id="submit" type="submit">Update password →</button>'
+    $('showPass').addEventListener('click', showPass)
   } else {
     $('submit').textContent = reset ? 'Send reset link →' : signup ? 'Create account →' : 'Sign in →'
   }
@@ -145,45 +153,40 @@ async function submit(e) {
       const credential = await createUserWithEmailAndPassword(auth, pendingEmail, password)
       const fullName = $('name').value.trim()
       if (fullName) await updateProfile(credential.user, { displayName: fullName })
-      await sendEmailVerification(credential.user)
+      await sendEmailVerification(credential.user, {
+        url: loginUrl + '?verified=1',
+        handleCodeInApp: true
+      })
       sessionStorage.setItem('li-pending-email', pendingEmail)
       await signOut(auth)
       render('verify')
-      status('Verification email sent. Check your inbox, then return here.', true)
+      status('Verification email sent. Check your inbox.', true)
       return
     }
 
     if (state === 'verify') {
-      const email = $('verifyEmail').value.trim()
-      if (!email) throw new Error('Your email address is missing.')
-      // Firebase email verification is link-based. Sign in briefly to refresh
-      // the user state, then continue only when emailVerified is true.
-      const password = sessionStorage.getItem('li-verify-password')
-      if (!password) {
-        status('After clicking the verification link, sign in with your email and password to continue.', true)
-        render('signin')
-        return
-      }
-      const credential = await signInWithEmailAndPassword(auth, email, password)
-      await reload(credential.user)
-      if (!credential.user.emailVerified) {
-        await signOut(auth)
-        throw new Error('Email is not verified yet. Open the verification email and try again.')
-      }
-      sessionStorage.removeItem('li-pending-email')
-      sessionStorage.removeItem('li-verify-password')
-      location.href = home
+      render('signin')
+      status('After clicking the verification link, sign in with your email and password.', true)
       return
     }
 
     if (state === 'reset') {
-      await sendPasswordResetEmail(auth, $('email').value.trim())
+      await sendPasswordResetEmail(auth, $('email').value.trim(), {
+        url: loginUrl,
+        handleCodeInApp: true
+      })
       status('Password reset email sent. Check your inbox.', true)
       return
     }
 
     if (state === 'recovery') {
-      location.href = loginUrl + '?reset=1'
+      if (!resetCode) throw new Error('The password reset link is missing or invalid.')
+      const password = $('password').value
+      if (password !== $('confirm').value) throw new Error('Passwords do not match.')
+      await confirmPasswordReset(auth, resetCode, password)
+      resetCode = ''
+      status('Password updated successfully. You can now sign in.', true)
+      setTimeout(() => render('signin'), 700)
     }
   } catch (err) {
     console.error('[Living India Firebase Auth]', err)
@@ -196,22 +199,13 @@ async function submit(e) {
 
 async function resendVerification() {
   const email = pendingEmail || $('verifyEmail')?.value?.trim()
-  if (!email) return status('Enter your email first.')
-  status('Preparing a new verification email…')
-  const password = sessionStorage.getItem('li-verify-password')
-  if (!password) {
-    status('Please sign in first so Firebase can send a new verification email.')
+  if (!email) {
     render('signin')
+    status('Sign in first, then we can send a new verification email.')
     return
   }
-  try {
-    const credential = await signInWithEmailAndPassword(auth, email, password)
-    await sendEmailVerification(credential.user)
-    await signOut(auth)
-    status('A new verification email has been sent.', true)
-  } catch (err) {
-    status(friendlyError(err))
-  }
+  render('signin')
+  status('Sign in with your email and password to resend the verification email.')
 }
 
 async function googleLogin() {
@@ -231,8 +225,12 @@ $('form')?.addEventListener('submit', submit)
 
 ;(async () => {
   const params = new URLSearchParams(location.search)
-  const reset = params.get('reset') === '1'
-  render(params.get('mode') === 'signup' ? 'signup' : 'signin')
+  const actionMode = params.get('mode')
+  const oobCode = params.get('oobCode') || ''
+  const verified = params.get('verified') === '1'
+  resetCode = ''
+
+  render(actionMode === 'signup' ? 'signup' : 'signin')
 
   try {
     const redirectResult = await getRedirectResult(auth)
@@ -245,11 +243,39 @@ $('form')?.addEventListener('submit', submit)
     status(friendlyError(err))
   }
 
+  try {
+    if (oobCode && actionMode === 'verifyEmail') {
+      await applyActionCode(auth, oobCode)
+      pendingEmail = sessionStorage.getItem('li-pending-email') || ''
+      sessionStorage.removeItem('li-pending-email')
+      render('signin')
+      status('Email verified successfully. You can now sign in.', true)
+      return
+    }
+
+    if (oobCode && actionMode === 'resetPassword') {
+      await verifyPasswordResetCode(auth, oobCode)
+      resetCode = oobCode
+      render('recovery')
+      status('Choose a new password.', true)
+      return
+    }
+
+    if (verified) {
+      render('signin')
+      status('Your email verification link was opened. You can now sign in.', true)
+      return
+    }
+  } catch (err) {
+    console.error('[Living India Firebase Action]', err)
+    status(friendlyError(err))
+    return
+  }
+
   onAuthStateChanged(auth, async user => {
     if (!user) return
     try {
       await reload(user)
-      if (reset) return
       if (user.providerData.some(p => p.providerId === 'google.com') || user.emailVerified) {
         location.href = home
       }
