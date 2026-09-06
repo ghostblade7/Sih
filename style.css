@@ -1,89 +1,77 @@
 :root {
-  /* Living India Color Palette */
-  --bg-parchment: #F5F2EA;
-  --bg-ivory: #FAF8F5;
-  --primary-teal: #0F4C5C;
-  --accent-terracotta: #C94A38;
-  --accent-rust: #9B3927;
-  --muted-gold: #D4AF37;
-  --text-brown: #3E2723;
-  --border-gold: rgba(212, 175, 55, 0.3);
+  /* Colors from your image */
+  --bg-parchment: #F2EBE0;
+  --bg-card: #FAF6F0;
+  --text-dark: #1A2727;
+  --btn-green: #1D3B3A;
+  --accent-rust: #B85C38;
+  --accent-gold: #CBA153;
   
   --font-heading: 'Playfair Display', serif;
   --font-body: 'Lora', serif;
   --font-sans: 'Inter', sans-serif;
+  --font-script: 'Caveat', cursive;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   background-color: var(--bg-parchment);
-  color: var(--text-brown);
+  color: var(--text-dark);
   font-family: var(--font-body);
-  background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><g fill="%23D4AF37" fill-opacity="0.03"><path d="M50 0L100 50L50 100L0 50Z"/></g></svg>');
-  -webkit-font-smoothing: antialiased;
+  /* TODO: ADD YOUR BACKGROUND IMAGE HERE LATER */
+  /* background-image: url('/path-to-your-illustration.jpg'); */
+  /* background-size: cover; */
 }
 
-h1, h2, h3, h4, h5 {
-  font-family: var(--font-heading);
-  color: var(--primary-teal);
-  font-weight: 700;
-}
+h1, h2, h3, h4 { font-family: var(--font-heading); color: var(--text-dark); }
 
-/* UI Elements */
+/* Buttons */
 .btn-primary {
-  background-color: var(--accent-terracotta);
-  color: var(--bg-ivory);
-  padding: 12px 24px;
+  background-color: var(--btn-green);
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 30px;
   border: none;
-  border-radius: 2px;
   font-family: var(--font-sans);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 
-.btn-primary:hover {
-  background-color: var(--accent-rust);
+.btn-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
 }
 
-.ornamental-border {
-  border: 1px solid var(--border-gold);
-  padding: 4px;
-  position: relative;
+/* Search Bar */
+.search-container {
+  display: flex; align-items: center;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 8px;
+  padding: 8px 16px;
+  width: 400px;
+}
+.search-container input {
+  border: none; background: transparent; width: 100%;
+  margin-left: 8px; font-family: var(--font-sans); outline: none;
 }
 
-.ornamental-border::before, .ornamental-border::after {
-  content: '';
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border: 1px solid var(--muted-gold);
-}
-
-/* Card Styling - avoiding generic SaaS looks */
-.heritage-card {
-  background-color: var(--bg-ivory);
-  border: 1px solid var(--border-gold);
-  border-radius: 4px;
+/* Cards */
+.experience-card {
+  background: var(--bg-card);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(62, 39, 35, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  display: flex; flex-direction: column;
 }
 
-.heritage-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(62, 39, 35, 0.1);
-  border-color: var(--muted-gold);
-}
-
-/* Hide flicker during auth load */
-.auth-hidden {
-  display: none !important;
+.card-img-placeholder {
+  height: 140px;
+  background-color: #ddd; /* Replace with real images later */
+  width: 100%;
 }
