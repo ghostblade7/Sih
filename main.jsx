@@ -1,12 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { subscribeToAuth } from './firebase.js';
+import { supabase } from './supabase.js';
 import './style.css';
 import { Search, User, Moon, ArrowRight } from 'lucide-react';
 
 const App = () => {
   const [user, setUser] = useState(null);
   const [authLoaded, setAuthLoaded] = useState(false);
+  const [heritage, setHeritage] = useState([]);
+
+useEffect(() => {
+  const loadHeritage = async () => {
+    const { data, error } = await supabase
+      .from('Heritage')
+      .select('*');
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return;
+    }
+
+    console.log('Heritage data:', data);
+    setHeritage(data || []);
+  };
+
+  loadHeritage();
+}, []);
 
   useEffect(() => {
     const unsubscribe = subscribeToAuth((currentUser) => {
@@ -94,21 +114,91 @@ const App = () => {
           <div style={{ height: '1px', flex: 1, backgroundColor: '#d0c6b4' }}></div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px' }}>
-          {experiences.map((exp, idx) => (
-            <div key={idx} className="experience-card">
-              <div className="card-img-placeholder"></div>
-              <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <h4 style={{ fontSize: '18px', marginBottom: '8px' }}>{exp.title}</h4>
-                <p style={{ fontSize: '13px', color: '#666', marginBottom: '16px', flex: 1 }}>{exp.desc}</p>
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <button className="btn-icon" style={{ backgroundColor: exp.color }}>
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: 'repeat(5, 1fr)',
+    gap: '20px'
+  }}
+>
+  {experiences.map((exp, idx) => (
+    <div key={idx} className="experience-card">
+      <div className="card-img-placeholder"></div>
+
+      <div
+        style={{
+          padding: '20px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <h4 style={{ fontSize: '18px', marginBottom: '8px' }}>
+          {exp.title}
+        </h4>
+
+        <p
+          style={{
+            fontSize: '13px',
+            color: '#666',
+            marginBottom: '16px',
+            flex: 1
+          }}
+        >
+          {exp.desc}
+        </p>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            className="btn-icon"
+            style={{ backgroundColor: exp.color }}
+          >
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  ))}
+
+  {heritage.map((item) => (
+    <div key={item.id} className="experience-card">
+      <div
+        className="card-img-placeholder"
+        style={{
+          backgroundImage: item.image_url
+            ? `url(${item.image_url})`
+            : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      ></div>
+
+      <div
+        style={{
+          padding: '20px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <h4 style={{ fontSize: '18px', marginBottom: '8px' }}>
+          {item.title}
+        </h4>
+
+        <p
+          style={{
+            fontSize: '13px',
+            color: '#666',
+            marginBottom: '16px',
+            flex: 1
+          }}
+        >
+          {item.description}
+        </p>
+      </div>
+    </div>
+  ))}
+</div>
         </div>
       </section>
     </div>
