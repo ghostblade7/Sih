@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCeuizWkJrvp2_iOxD4UOFL12Os2kOKybQ",
+  apiKey: "AIzaSyCeuizWkJRvp2_iOxD4UOFL12Os2k0KybQ",
   authDomain: "living-india-7f73b.firebaseapp.com",
   projectId: "living-india-7f73b",
   storageBucket: "living-india-7f73b.firebasestorage.app",
