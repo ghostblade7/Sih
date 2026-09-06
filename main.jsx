@@ -198,7 +198,7 @@ useEffect(() => {
       </div>
     </div>
   ))}
-
+</div>
       </section>
     </div>
   );
