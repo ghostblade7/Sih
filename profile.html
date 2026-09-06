@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile | Living India</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body class="auth-hidden" id="profile-body">
+    
+    <nav style="display: flex; justify-content: space-between; padding: 24px 5%; align-items: center; border-bottom: 1px solid var(--border-gold); background: var(--bg-ivory);">
+      <a href="/" style="text-decoration: none;"><h1 style="margin: 0; font-size: 24px; color: var(--primary-teal); text-transform: uppercase;">Living India</h1></a>
+      <button id="logout-btn" style="background: none; border: none; color: var(--accent-rust); font-weight: bold; cursor: pointer;">Logout</button>
+    </nav>
+
+    <div style="max-width: 1000px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 40px;">
+      
+      <div class="heritage-card" style="padding: 32px; height: fit-content;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary-teal); color: white; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px;" id="avatar-initial">?</div>
+        <h3 id="user-email" style="word-break: break-all; font-size: 18px;">Loading...</h3>
+        <p style="font-family: var(--font-sans); font-size: 14px; margin-top: 8px; color: var(--accent-terracotta);">Heritage Contributor</p>
+      </div>
+
+      <div>
+        <h2 style="font-size: 32px; margin-bottom: 24px;">Heritage Passport</h2>
+        <div class="ornamental-border" style="background: var(--bg-ivory); padding: 40px;">
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div style="text-align: center; padding: 24px; border: 1px dashed var(--muted-gold);">
+              <h4 style="font-size: 32px; color: var(--accent-rust);">12</h4>
+              <p style="font-family: var(--font-sans); text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">States Explored</p>
+            </div>
+            <div style="text-align: center; padding: 24px; border: 1px dashed var(--muted-gold);">
+              <h4 style="font-size: 32px; color: var(--accent-rust);">4</h4>
+              <p style="font-family: var(--font-sans); text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Contributions</p>
+            </div>
+          </div>
+
+          <h3 style="margin-top: 40px; margin-bottom: 16px; font-size: 20px;">Badges Earned</h3>
+          <div style="display: flex; gap: 16px;">
+            <div style="width: 60px; height: 60px; background: var(--muted-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; text-align: center; line-height: 1.1;">Rajasthan<br>Explorer</div>
+            <div style="width: 60px; height: 60px; background: var(--primary-teal); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; text-align: center; line-height: 1.1;">Craft<br>Master</div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <script type="module">
+      import { auth, subscribeToAuth } from './firebase.js';
+      import { signOut } from 'firebase/auth';
+
+      const body = document.getElementById('profile-body');
+      const userEmailEl = document.getElementById('user-email');
+      const avatarInitialEl = document.getElementById('avatar-initial');
+
+      // Route guarding: If logged out, redirect to index
+      subscribeToAuth((user) => {
+        if (!user) {
+          window.location.href = '/';
+        } else {
+          body.classList.remove('auth-hidden');
+          userEmailEl.textContent = user.email;
+          avatarInitialEl.textContent = user.email.charAt(0).toUpperCase();
+        }
+      });
+
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await signOut(auth);
+        // onAuthStateChanged will handle redirect to index
+      });
+    </script>
+  </body>
+</html>
